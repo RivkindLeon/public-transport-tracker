@@ -1,12 +1,13 @@
 # Scope
 
 ## In scope for now
-- initial repository setup
 - lightweight product framing
-- simple documentation structure
+- mocked-data definition for stops, routes, and arrivals
+- a first app shell focused on stop selection, arrival boards, and route details
 
 ## Out of scope for now
-- transport data provider decisions
-- implementation architecture
+- real transport data provider decisions
 - real-time integration details
 - regional rollout strategy
+- trip planning across transfers
+- map-heavy experiences
