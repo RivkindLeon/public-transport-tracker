@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getRoute, getStopArrivals, getTransportSnapshot } from './data/mockData';
 import type { Arrival, ArrivalStatus } from './types';
 
@@ -26,18 +26,37 @@ const getMinutesUntil = (value: string) => {
 
 export default function App() {
   const [selectedStopId, setSelectedStopId] = useState(snapshot.stops[0]?.id ?? '');
-  const arrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
-  const [selectedArrivalId, setSelectedArrivalId] = useState(arrivals[0]?.id ?? '');
+  const [activeLine, setActiveLine] = useState<'all' | string>('all');
+  const stopArrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
+  const [selectedArrivalId, setSelectedArrivalId] = useState(stopArrivals[0]?.id ?? '');
 
   const selectedStop = snapshot.stops.find((stop) => stop.id === selectedStopId) ?? snapshot.stops[0];
+  const availableLines = selectedStop?.lines ?? [];
+  const arrivals = useMemo(
+    () => (activeLine === 'all' ? stopArrivals : stopArrivals.filter((arrival) => arrival.line === activeLine)),
+    [activeLine, stopArrivals],
+  );
   const selectedArrival = arrivals.find((arrival) => arrival.id === selectedArrivalId) ?? arrivals[0];
   const selectedRoute = selectedArrival ? getRoute(selectedArrival.routeId) : undefined;
 
   const favoriteStops = snapshot.stops.filter((stop) => stop.isFavorite);
   const nearbyStops = snapshot.stops.filter((stop) => !stop.isFavorite);
 
+  useEffect(() => {
+    if (!availableLines.includes(activeLine)) {
+      setActiveLine('all');
+    }
+  }, [activeLine, availableLines]);
+
+  useEffect(() => {
+    if (!arrivals.some((arrival) => arrival.id === selectedArrivalId)) {
+      setSelectedArrivalId(arrivals[0]?.id ?? '');
+    }
+  }, [arrivals, selectedArrivalId]);
+
   const handleStopSelect = (stopId: string) => {
     setSelectedStopId(stopId);
+    setActiveLine('all');
     const nextArrival = getStopArrivals(stopId)[0];
     setSelectedArrivalId(nextArrival?.id ?? '');
   };
@@ -144,11 +163,40 @@ export default function App() {
             </p>
           </div>
 
+          <div className="filter-toolbar" aria-label="Arrival line filters">
+            <button
+              type="button"
+              className={`filter-chip ${activeLine === 'all' ? 'selected' : ''}`}
+              onClick={() => setActiveLine('all')}
+            >
+              All lines
+            </button>
+            {availableLines.map((line) => (
+              <button
+                key={line}
+                type="button"
+                className={`filter-chip ${activeLine === line ? 'selected' : ''}`}
+                onClick={() => setActiveLine(line)}
+              >
+                Line {line}
+              </button>
+            ))}
+          </div>
+
+          <div className="board-summary">
+            <span>{arrivals.length} visible arrivals</span>
+            <span>{activeLine === 'all' ? 'Showing every line' : `Filtered to line ${activeLine}`}</span>
+          </div>
+
           <div className="arrival-list">
             {arrivals.length === 0 ? (
               <div className="empty-state">
                 <h3>No arrivals</h3>
-                <p>This stop has no mock arrivals yet.</p>
+                <p>
+                  {activeLine === 'all'
+                    ? 'This stop has no mock arrivals yet.'
+                    : `There are no visible arrivals for line ${activeLine} at this stop.`}
+                </p>
               </div>
             ) : (
               arrivals.map(renderArrivalCard)
