@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getRoute, getStopArrivals, getTransportSnapshot } from './data/mockData';
-import type { Arrival, ArrivalStatus } from './types';
+import type { Arrival, ArrivalStatus, Stop } from './types';
 
 const snapshot = getTransportSnapshot();
+const initialStops = snapshot.stops;
 
 const statusLabels: Record<ArrivalStatus, string> = {
   'on-time': 'On time',
@@ -25,12 +26,13 @@ const getMinutesUntil = (value: string) => {
 };
 
 export default function App() {
-  const [selectedStopId, setSelectedStopId] = useState(snapshot.stops[0]?.id ?? '');
+  const [stops, setStops] = useState(initialStops);
+  const [selectedStopId, setSelectedStopId] = useState(initialStops[0]?.id ?? '');
   const [activeLine, setActiveLine] = useState<'all' | string>('all');
   const stopArrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
   const [selectedArrivalId, setSelectedArrivalId] = useState(stopArrivals[0]?.id ?? '');
 
-  const selectedStop = snapshot.stops.find((stop) => stop.id === selectedStopId) ?? snapshot.stops[0];
+  const selectedStop = stops.find((stop) => stop.id === selectedStopId) ?? stops[0];
   const availableLines = selectedStop?.lines ?? [];
   const arrivals = useMemo(
     () => (activeLine === 'all' ? stopArrivals : stopArrivals.filter((arrival) => arrival.line === activeLine)),
@@ -39,8 +41,8 @@ export default function App() {
   const selectedArrival = arrivals.find((arrival) => arrival.id === selectedArrivalId) ?? arrivals[0];
   const selectedRoute = selectedArrival ? getRoute(selectedArrival.routeId) : undefined;
 
-  const favoriteStops = snapshot.stops.filter((stop) => stop.isFavorite);
-  const nearbyStops = snapshot.stops.filter((stop) => !stop.isFavorite);
+  const favoriteStops = stops.filter((stop) => stop.isFavorite);
+  const nearbyStops = stops.filter((stop) => !stop.isFavorite);
 
   useEffect(() => {
     if (!availableLines.includes(activeLine)) {
@@ -59,6 +61,53 @@ export default function App() {
     setActiveLine('all');
     const nextArrival = getStopArrivals(stopId)[0];
     setSelectedArrivalId(nextArrival?.id ?? '');
+  };
+
+  const handleFavoriteToggle = (stopId: string) => {
+    setStops((currentStops) => {
+      const nextStops = currentStops.map((stop) =>
+        stop.id === stopId ? { ...stop, isFavorite: !stop.isFavorite } : stop,
+      );
+
+      nextStops.sort((left, right) => {
+        if (left.isFavorite === right.isFavorite) {
+          return left.name.localeCompare(right.name);
+        }
+
+        return left.isFavorite ? -1 : 1;
+      });
+
+      return nextStops;
+    });
+  };
+
+  const renderStopCard = (stop: Stop) => {
+    const isSelected = selectedStop?.id === stop.id;
+
+    return (
+      <article key={stop.id} className={`stop-card ${isSelected ? 'selected' : ''}`}>
+        <div className="stop-card-top">
+          <div>
+            <strong>{stop.name}</strong>
+            <span>{stop.area}</span>
+          </div>
+          <button
+            type="button"
+            className={`pin-toggle ${stop.isFavorite ? 'active' : ''}`}
+            onClick={() => handleFavoriteToggle(stop.id)}
+            aria-label={stop.isFavorite ? `Unpin ${stop.name}` : `Pin ${stop.name}`}
+            aria-pressed={stop.isFavorite}
+          >
+            {stop.isFavorite ? 'Pinned' : 'Pin'}
+          </button>
+        </div>
+        <span>Code {stop.code}</span>
+        <span>Lines {stop.lines.join(', ')}</span>
+        <button type="button" className="stop-select-button" onClick={() => handleStopSelect(stop.id)}>
+          {isSelected ? 'Viewing board' : 'View board'}
+        </button>
+      </article>
+    );
   };
 
   const renderArrivalCard = (arrival: Arrival) => {
@@ -98,11 +147,12 @@ export default function App() {
           <p className="eyebrow">Mocked arrivals milestone</p>
           <h1>Public Transport Tracker</h1>
           <p className="page-subtitle">
-            Browse saved and nearby stops, inspect the next arrivals, and open the selected route without needing a live provider yet.
+            Browse saved and nearby stops, pin the places you care about most, inspect the next arrivals, and open the selected route without needing a live provider yet.
           </p>
         </div>
         <div className="summary-card">
-          <span>{snapshot.stops.length} stops</span>
+          <span>{stops.length} stops</span>
+          <span>{favoriteStops.length} pinned</span>
           <span>{snapshot.routes.length} routes</span>
           <span>{snapshot.arrivals.length} mock arrivals</span>
           <span>Updated {formatTime(snapshot.generatedAt)}</span>
@@ -113,54 +163,52 @@ export default function App() {
         <aside className="panel stop-panel">
           <div className="panel-header">
             <h2>Stops</h2>
-            <p>Pick a stop to view its arrival board.</p>
+            <p>Pick a stop to view its arrival board and pin or unpin it from the list.</p>
           </div>
 
           <section className="stop-group">
             <div className="group-label">Pinned stops</div>
             <div className="stop-list">
-              {favoriteStops.map((stop) => (
-                <button
-                  key={stop.id}
-                  type="button"
-                  className={`stop-card ${selectedStop?.id === stop.id ? 'selected' : ''}`}
-                  onClick={() => handleStopSelect(stop.id)}
-                >
-                  <strong>{stop.name}</strong>
-                  <span>{stop.area}</span>
-                  <span>Code {stop.code}</span>
-                  <span>Lines {stop.lines.join(', ')}</span>
-                </button>
-              ))}
+              {favoriteStops.length === 0 ? (
+                <div className="empty-state compact-empty-state">
+                  <p>No pinned stops yet.</p>
+                </div>
+              ) : (
+                favoriteStops.map(renderStopCard)
+              )}
             </div>
           </section>
 
           <section className="stop-group">
             <div className="group-label">Nearby stops</div>
             <div className="stop-list">
-              {nearbyStops.map((stop) => (
-                <button
-                  key={stop.id}
-                  type="button"
-                  className={`stop-card ${selectedStop?.id === stop.id ? 'selected' : ''}`}
-                  onClick={() => handleStopSelect(stop.id)}
-                >
-                  <strong>{stop.name}</strong>
-                  <span>{stop.area}</span>
-                  <span>Code {stop.code}</span>
-                  <span>Lines {stop.lines.join(', ')}</span>
-                </button>
-              ))}
+              {nearbyStops.length === 0 ? (
+                <div className="empty-state compact-empty-state">
+                  <p>All stops are pinned right now.</p>
+                </div>
+              ) : (
+                nearbyStops.map(renderStopCard)
+              )}
             </div>
           </section>
         </aside>
 
         <section className="panel arrivals-panel">
-          <div className="panel-header">
-            <h2>{selectedStop.name}</h2>
-            <p>
-              {selectedStop.area} · Stop {selectedStop.code}
-            </p>
+          <div className="panel-header panel-header-row">
+            <div>
+              <h2>{selectedStop.name}</h2>
+              <p>
+                {selectedStop.area} · Stop {selectedStop.code}
+              </p>
+            </div>
+            <button
+              type="button"
+              className={`pin-toggle ${selectedStop.isFavorite ? 'active' : ''}`}
+              onClick={() => handleFavoriteToggle(selectedStop.id)}
+              aria-pressed={selectedStop.isFavorite}
+            >
+              {selectedStop.isFavorite ? 'Pinned stop' : 'Pin stop'}
+            </button>
           </div>
 
           <div className="filter-toolbar" aria-label="Arrival line filters">
