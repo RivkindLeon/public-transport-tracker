@@ -152,6 +152,9 @@ p {
   color: inherit;
   text-align: left;
   padding: 14px;
+}
+
+.arrival-card {
   cursor: pointer;
 }
 
@@ -165,9 +168,10 @@ p {
 .stop-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
 }
 
+.stop-card-top,
 .arrival-card-top,
 .arrival-meta,
 .route-highlight,
@@ -181,6 +185,16 @@ p {
 .arrival-meta,
 .route-summary-grid {
   flex-wrap: wrap;
+}
+
+.stop-card-top {
+  align-items: flex-start;
+}
+
+.stop-card-top > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .line-badge,
@@ -264,6 +278,45 @@ p {
   color: #e2e8f0;
 }
 
+.pin-toggle {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.68);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.pin-toggle.active {
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.14);
+  color: #fde68a;
+}
+
+.stop-select-button {
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: rgba(56, 189, 248, 0.12);
+  color: #e0f2fe;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.panel-header-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.compact-empty-state {
+  padding: 12px;
+}
+
+.compact-empty-state p {
+  margin-bottom: 0;
+}
+
 .empty-state {
   padding: 18px;
   border: 1px dashed rgba(148, 163, 184, 0.24);
@@ -281,7 +334,8 @@ p {
     padding: 16px;
   }
 
-  .page-header {
+  .page-header,
+  .panel-header-row {
     flex-direction: column;
   }
 
