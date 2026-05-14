@@ -3,7 +3,43 @@ import { getRoute, getStopArrivals, getTransportSnapshot } from './data/mockData
 import type { Arrival, ArrivalStatus, Stop } from './types';
 
 const snapshot = getTransportSnapshot();
-const initialStops = snapshot.stops;
+const favoriteStopsStorageKey = 'public-transport-tracker.favorite-stop-ids';
+
+const sortStops = (stops: Stop[]) =>
+  [...stops].sort((left, right) => {
+    if (left.isFavorite === right.isFavorite) {
+      return left.name.localeCompare(right.name);
+    }
+
+    return left.isFavorite ? -1 : 1;
+  });
+
+const getInitialStops = () => {
+  if (typeof window === 'undefined') {
+    return sortStops(snapshot.stops);
+  }
+
+  const savedFavoriteStopIds = window.localStorage.getItem(favoriteStopsStorageKey);
+
+  if (!savedFavoriteStopIds) {
+    return sortStops(snapshot.stops);
+  }
+
+  try {
+    const favoriteStopIds = new Set(JSON.parse(savedFavoriteStopIds) as string[]);
+
+    return sortStops(
+      snapshot.stops.map((stop) => ({
+        ...stop,
+        isFavorite: favoriteStopIds.has(stop.id),
+      })),
+    );
+  } catch {
+    return sortStops(snapshot.stops);
+  }
+};
+
+const initialStops = getInitialStops();
 
 const statusLabels: Record<ArrivalStatus, string> = {
   'on-time': 'On time',
@@ -26,7 +62,7 @@ const getMinutesUntil = (value: string) => {
 };
 
 export default function App() {
-  const [stops, setStops] = useState(initialStops);
+  const [stops, setStops] = useState<Stop[]>(() => initialStops);
   const [selectedStopId, setSelectedStopId] = useState(initialStops[0]?.id ?? '');
   const [activeLine, setActiveLine] = useState<'all' | string>('all');
   const stopArrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
@@ -43,6 +79,13 @@ export default function App() {
 
   const favoriteStops = stops.filter((stop) => stop.isFavorite);
   const nearbyStops = stops.filter((stop) => !stop.isFavorite);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      favoriteStopsStorageKey,
+      JSON.stringify(stops.filter((stop) => stop.isFavorite).map((stop) => stop.id)),
+    );
+  }, [stops]);
 
   useEffect(() => {
     if (!availableLines.includes(activeLine)) {
@@ -65,19 +108,9 @@ export default function App() {
 
   const handleFavoriteToggle = (stopId: string) => {
     setStops((currentStops) => {
-      const nextStops = currentStops.map((stop) =>
-        stop.id === stopId ? { ...stop, isFavorite: !stop.isFavorite } : stop,
+      return sortStops(
+        currentStops.map((stop) => (stop.id === stopId ? { ...stop, isFavorite: !stop.isFavorite } : stop)),
       );
-
-      nextStops.sort((left, right) => {
-        if (left.isFavorite === right.isFavorite) {
-          return left.name.localeCompare(right.name);
-        }
-
-        return left.isFavorite ? -1 : 1;
-      });
-
-      return nextStops;
     });
   };
 

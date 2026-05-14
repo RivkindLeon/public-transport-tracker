@@ -10,10 +10,10 @@ A public project for exploring an app that helps users track public transport sc
 Public transport information is often fragmented, delayed, or hard to compare, which makes trip planning and schedule monitoring harder than it should be.
 
 ## Current status
-Product framing is in place, and the first mocked-arrivals app shell is now available locally with stop selection, arrival boards, and route detail rendering powered by local mock data.
+Product framing is in place, and the first mocked-arrivals app shell is now available locally with stop selection, arrival boards, route detail rendering, and persisted pinned stops powered by local mock data.
 
 ## Next milestone
-Refine the mocked experience with focused interactions such as favorites management, route filtering, or lightweight disruption drill-down before choosing any real transport data provider.
+Refine the mocked experience with focused interactions such as disruption drill-down, preference persistence for more board state, or lightweight trip-context views before choosing any real transport data provider.
 
 See `docs/mocked-arrivals-foundation.md` for the v0 scope, entities, mock data shape, and exit criteria.
 
