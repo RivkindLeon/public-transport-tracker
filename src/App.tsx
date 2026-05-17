@@ -4,6 +4,8 @@ import type { Arrival, ArrivalStatus, Stop } from './types';
 
 const snapshot = getTransportSnapshot();
 const favoriteStopsStorageKey = 'public-transport-tracker.favorite-stop-ids';
+const selectedStopStorageKey = 'public-transport-tracker.selected-stop-id';
+const activeLineStorageKey = 'public-transport-tracker.active-line';
 
 const sortStops = (stops: Stop[]) =>
   [...stops].sort((left, right) => {
@@ -41,6 +43,35 @@ const getInitialStops = () => {
 
 const initialStops = getInitialStops();
 
+const getInitialSelectedStopId = () => {
+  if (typeof window === 'undefined') {
+    return initialStops[0]?.id ?? '';
+  }
+
+  const savedSelectedStopId = window.localStorage.getItem(selectedStopStorageKey);
+
+  if (savedSelectedStopId && initialStops.some((stop) => stop.id === savedSelectedStopId)) {
+    return savedSelectedStopId;
+  }
+
+  return initialStops[0]?.id ?? '';
+};
+
+const getInitialActiveLine = (selectedStopId: string) => {
+  if (typeof window === 'undefined') {
+    return 'all';
+  }
+
+  const savedActiveLine = window.localStorage.getItem(activeLineStorageKey);
+  const selectedStop = initialStops.find((stop) => stop.id === selectedStopId);
+
+  if (savedActiveLine && savedActiveLine !== 'all' && selectedStop?.lines.includes(savedActiveLine)) {
+    return savedActiveLine;
+  }
+
+  return 'all';
+};
+
 const statusLabels: Record<ArrivalStatus, string> = {
   'on-time': 'On time',
   delayed: 'Delayed',
@@ -63,8 +94,8 @@ const getMinutesUntil = (value: string) => {
 
 export default function App() {
   const [stops, setStops] = useState<Stop[]>(() => initialStops);
-  const [selectedStopId, setSelectedStopId] = useState(initialStops[0]?.id ?? '');
-  const [activeLine, setActiveLine] = useState<'all' | string>('all');
+  const [selectedStopId, setSelectedStopId] = useState(() => getInitialSelectedStopId());
+  const [activeLine, setActiveLine] = useState<'all' | string>(() => getInitialActiveLine(getInitialSelectedStopId()));
   const stopArrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
   const [selectedArrivalId, setSelectedArrivalId] = useState(stopArrivals[0]?.id ?? '');
 
@@ -86,6 +117,14 @@ export default function App() {
       JSON.stringify(stops.filter((stop) => stop.isFavorite).map((stop) => stop.id)),
     );
   }, [stops]);
+
+  useEffect(() => {
+    window.localStorage.setItem(selectedStopStorageKey, selectedStopId);
+  }, [selectedStopId]);
+
+  useEffect(() => {
+    window.localStorage.setItem(activeLineStorageKey, activeLine);
+  }, [activeLine]);
 
   useEffect(() => {
     if (!availableLines.includes(activeLine)) {
