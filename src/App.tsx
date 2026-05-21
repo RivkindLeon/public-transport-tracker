@@ -6,6 +6,7 @@ const snapshot = getTransportSnapshot();
 const favoriteStopsStorageKey = 'public-transport-tracker.favorite-stop-ids';
 const selectedStopStorageKey = 'public-transport-tracker.selected-stop-id';
 const activeLineStorageKey = 'public-transport-tracker.active-line';
+const selectedArrivalStorageKey = 'public-transport-tracker.selected-arrivals';
 
 const sortStops = (stops: Stop[]) =>
   [...stops].sort((left, right) => {
@@ -72,6 +73,37 @@ const getInitialActiveLine = (selectedStopId: string) => {
   return 'all';
 };
 
+const getSavedSelectedArrivals = () => {
+  if (typeof window === 'undefined') {
+    return {} as Record<string, string>;
+  }
+
+  const savedSelectedArrivals = window.localStorage.getItem(selectedArrivalStorageKey);
+
+  if (!savedSelectedArrivals) {
+    return {} as Record<string, string>;
+  }
+
+  try {
+    return JSON.parse(savedSelectedArrivals) as Record<string, string>;
+  } catch {
+    return {} as Record<string, string>;
+  }
+};
+
+const getInitialSelectedArrivalId = (selectedStopId: string, lineFilter: 'all' | string) => {
+  const stopArrivals = getStopArrivals(selectedStopId);
+  const savedSelectedArrivalId = getSavedSelectedArrivals()[selectedStopId];
+  const visibleArrivals =
+    lineFilter === 'all' ? stopArrivals : stopArrivals.filter((arrival) => arrival.line === lineFilter);
+
+  if (savedSelectedArrivalId && visibleArrivals.some((arrival) => arrival.id === savedSelectedArrivalId)) {
+    return savedSelectedArrivalId;
+  }
+
+  return visibleArrivals[0]?.id ?? '';
+};
+
 const statusLabels: Record<ArrivalStatus, string> = {
   'on-time': 'On time',
   delayed: 'Delayed',
@@ -97,7 +129,9 @@ export default function App() {
   const [selectedStopId, setSelectedStopId] = useState(() => getInitialSelectedStopId());
   const [activeLine, setActiveLine] = useState<'all' | string>(() => getInitialActiveLine(getInitialSelectedStopId()));
   const stopArrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
-  const [selectedArrivalId, setSelectedArrivalId] = useState(stopArrivals[0]?.id ?? '');
+  const [selectedArrivalId, setSelectedArrivalId] = useState(() =>
+    getInitialSelectedArrivalId(getInitialSelectedStopId(), getInitialActiveLine(getInitialSelectedStopId())),
+  );
 
   const selectedStop = stops.find((stop) => stop.id === selectedStopId) ?? stops[0];
   const availableLines = selectedStop?.lines ?? [];
@@ -127,6 +161,28 @@ export default function App() {
   }, [activeLine]);
 
   useEffect(() => {
+    const savedSelectedArrivals = getSavedSelectedArrivals();
+
+    if (selectedArrivalId) {
+      window.localStorage.setItem(
+        selectedArrivalStorageKey,
+        JSON.stringify({
+          ...savedSelectedArrivals,
+          [selectedStopId]: selectedArrivalId,
+        }),
+      );
+      return;
+    }
+
+    if (!savedSelectedArrivals[selectedStopId]) {
+      return;
+    }
+
+    const { [selectedStopId]: _removedSelectedArrival, ...remainingSelectedArrivals } = savedSelectedArrivals;
+    window.localStorage.setItem(selectedArrivalStorageKey, JSON.stringify(remainingSelectedArrivals));
+  }, [selectedArrivalId, selectedStopId]);
+
+  useEffect(() => {
     if (!availableLines.includes(activeLine)) {
       setActiveLine('all');
     }
@@ -134,15 +190,19 @@ export default function App() {
 
   useEffect(() => {
     if (!arrivals.some((arrival) => arrival.id === selectedArrivalId)) {
-      setSelectedArrivalId(arrivals[0]?.id ?? '');
+      const savedSelectedArrivalId = getSavedSelectedArrivals()[selectedStopId];
+      const nextSelectedArrivalId = arrivals.some((arrival) => arrival.id === savedSelectedArrivalId)
+        ? savedSelectedArrivalId
+        : arrivals[0]?.id ?? '';
+
+      setSelectedArrivalId(nextSelectedArrivalId);
     }
-  }, [arrivals, selectedArrivalId]);
+  }, [arrivals, selectedArrivalId, selectedStopId]);
 
   const handleStopSelect = (stopId: string) => {
     setSelectedStopId(stopId);
     setActiveLine('all');
-    const nextArrival = getStopArrivals(stopId)[0];
-    setSelectedArrivalId(nextArrival?.id ?? '');
+    setSelectedArrivalId(getInitialSelectedArrivalId(stopId, 'all'));
   };
 
   const handleFavoriteToggle = (stopId: string) => {
