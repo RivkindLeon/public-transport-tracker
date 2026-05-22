@@ -7,6 +7,7 @@ const favoriteStopsStorageKey = 'public-transport-tracker.favorite-stop-ids';
 const selectedStopStorageKey = 'public-transport-tracker.selected-stop-id';
 const activeLineStorageKey = 'public-transport-tracker.active-line';
 const selectedArrivalStorageKey = 'public-transport-tracker.selected-arrivals';
+const recentStopsStorageKey = 'public-transport-tracker.recent-stop-ids';
 
 const sortStops = (stops: Stop[]) =>
   [...stops].sort((left, right) => {
@@ -104,6 +105,26 @@ const getInitialSelectedArrivalId = (selectedStopId: string, lineFilter: 'all' |
   return visibleArrivals[0]?.id ?? '';
 };
 
+const getInitialRecentStopIds = () => {
+  if (typeof window === 'undefined') {
+    return [] as string[];
+  }
+
+  const savedRecentStopIds = window.localStorage.getItem(recentStopsStorageKey);
+
+  if (!savedRecentStopIds) {
+    return [] as string[];
+  }
+
+  try {
+    const recentStopIds = JSON.parse(savedRecentStopIds) as string[];
+
+    return recentStopIds.filter((stopId) => initialStops.some((stop) => stop.id === stopId));
+  } catch {
+    return [] as string[];
+  }
+};
+
 const statusLabels: Record<ArrivalStatus, string> = {
   'on-time': 'On time',
   delayed: 'Delayed',
@@ -127,6 +148,7 @@ const getMinutesUntil = (value: string) => {
 export default function App() {
   const [stops, setStops] = useState<Stop[]>(() => initialStops);
   const [selectedStopId, setSelectedStopId] = useState(() => getInitialSelectedStopId());
+  const [recentStopIds, setRecentStopIds] = useState<string[]>(() => getInitialRecentStopIds());
   const [activeLine, setActiveLine] = useState<'all' | string>(() => getInitialActiveLine(getInitialSelectedStopId()));
   const stopArrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
   const [selectedArrivalId, setSelectedArrivalId] = useState(() =>
@@ -143,7 +165,10 @@ export default function App() {
   const selectedRoute = selectedArrival ? getRoute(selectedArrival.routeId) : undefined;
 
   const favoriteStops = stops.filter((stop) => stop.isFavorite);
-  const nearbyStops = stops.filter((stop) => !stop.isFavorite);
+  const recentStops = recentStopIds
+    .map((stopId) => stops.find((stop) => stop.id === stopId))
+    .filter((stop): stop is Stop => Boolean(stop));
+  const nearbyStops = stops.filter((stop) => !stop.isFavorite && !recentStopIds.includes(stop.id));
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -155,6 +180,10 @@ export default function App() {
   useEffect(() => {
     window.localStorage.setItem(selectedStopStorageKey, selectedStopId);
   }, [selectedStopId]);
+
+  useEffect(() => {
+    window.localStorage.setItem(recentStopsStorageKey, JSON.stringify(recentStopIds));
+  }, [recentStopIds]);
 
   useEffect(() => {
     window.localStorage.setItem(activeLineStorageKey, activeLine);
@@ -201,6 +230,7 @@ export default function App() {
 
   const handleStopSelect = (stopId: string) => {
     setSelectedStopId(stopId);
+    setRecentStopIds((currentRecentStopIds) => [stopId, ...currentRecentStopIds.filter((id) => id !== stopId)].slice(0, 3));
     setActiveLine('all');
     setSelectedArrivalId(getInitialSelectedArrivalId(stopId, 'all'));
   };
@@ -312,11 +342,24 @@ export default function App() {
           </section>
 
           <section className="stop-group">
+            <div className="group-label">Recently viewed</div>
+            <div className="stop-list">
+              {recentStops.length === 0 ? (
+                <div className="empty-state compact-empty-state">
+                  <p>Your recently viewed stops will appear here.</p>
+                </div>
+              ) : (
+                recentStops.map(renderStopCard)
+              )}
+            </div>
+          </section>
+
+          <section className="stop-group">
             <div className="group-label">Nearby stops</div>
             <div className="stop-list">
               {nearbyStops.length === 0 ? (
                 <div className="empty-state compact-empty-state">
-                  <p>All stops are pinned right now.</p>
+                  <p>All non-pinned stops are already in your recent list.</p>
                 </div>
               ) : (
                 nearbyStops.map(renderStopCard)
