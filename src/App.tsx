@@ -7,7 +7,13 @@ const favoriteStopsStorageKey = 'public-transport-tracker.favorite-stop-ids';
 const selectedStopStorageKey = 'public-transport-tracker.selected-stop-id';
 const activeLineStorageKey = 'public-transport-tracker.active-line';
 const selectedArrivalStorageKey = 'public-transport-tracker.selected-arrivals';
-const recentStopsStorageKey = 'public-transport-tracker.recent-stop-ids';
+const recentStopsStorageKey = 'public-transport-tracker.recent-stop-views';
+const maxRecentStops = 5;
+
+type RecentStopView = {
+  stopId: string;
+  viewedAt: string;
+};
 
 const sortStops = (stops: Stop[]) =>
   [...stops].sort((left, right) => {
@@ -105,23 +111,40 @@ const getInitialSelectedArrivalId = (selectedStopId: string, lineFilter: 'all' |
   return visibleArrivals[0]?.id ?? '';
 };
 
-const getInitialRecentStopIds = () => {
+const getInitialRecentStopViews = () => {
   if (typeof window === 'undefined') {
-    return [] as string[];
+    return [] as RecentStopView[];
   }
 
-  const savedRecentStopIds = window.localStorage.getItem(recentStopsStorageKey);
+  const savedRecentStopViews = window.localStorage.getItem(recentStopsStorageKey);
 
-  if (!savedRecentStopIds) {
-    return [] as string[];
+  if (!savedRecentStopViews) {
+    return [] as RecentStopView[];
   }
 
   try {
-    const recentStopIds = JSON.parse(savedRecentStopIds) as string[];
+    const parsedRecentStopViews = JSON.parse(savedRecentStopViews) as RecentStopView[] | string[];
 
-    return recentStopIds.filter((stopId) => initialStops.some((stop) => stop.id === stopId));
+    if (!Array.isArray(parsedRecentStopViews)) {
+      return [] as RecentStopView[];
+    }
+
+    if (parsedRecentStopViews.every((entry) => typeof entry === 'string')) {
+      return (parsedRecentStopViews as string[])
+        .filter((stopId) => initialStops.some((stop) => stop.id === stopId))
+        .map((stopId) => ({ stopId, viewedAt: snapshot.generatedAt }));
+    }
+
+    return (parsedRecentStopViews as RecentStopView[])
+      .filter(
+        (entry) =>
+          typeof entry?.stopId === 'string' &&
+          typeof entry?.viewedAt === 'string' &&
+          initialStops.some((stop) => stop.id === entry.stopId),
+      )
+      .slice(0, maxRecentStops);
   } catch {
-    return [] as string[];
+    return [] as RecentStopView[];
   }
 };
 
@@ -145,10 +168,31 @@ const getMinutesUntil = (value: string) => {
   return minutes === 0 ? 'Due now' : `${minutes} min`;
 };
 
+const formatRecentView = (value: string) => {
+  const deltaMs = Date.now() - new Date(value).getTime();
+  const minutes = Math.max(0, Math.round(deltaMs / 60_000));
+
+  if (minutes < 1) {
+    return 'Viewed just now';
+  }
+
+  if (minutes < 60) {
+    return `Viewed ${minutes} min ago`;
+  }
+
+  const hours = Math.round(minutes / 60);
+
+  if (hours < 24) {
+    return `Viewed ${hours}h ago`;
+  }
+
+  return `Viewed ${new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(new Date(value))}`;
+};
+
 export default function App() {
   const [stops, setStops] = useState<Stop[]>(() => initialStops);
   const [selectedStopId, setSelectedStopId] = useState(() => getInitialSelectedStopId());
-  const [recentStopIds, setRecentStopIds] = useState<string[]>(() => getInitialRecentStopIds());
+  const [recentStopViews, setRecentStopViews] = useState<RecentStopView[]>(() => getInitialRecentStopViews());
   const [activeLine, setActiveLine] = useState<'all' | string>(() => getInitialActiveLine(getInitialSelectedStopId()));
   const stopArrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
   const [selectedArrivalId, setSelectedArrivalId] = useState(() =>
@@ -165,10 +209,15 @@ export default function App() {
   const selectedRoute = selectedArrival ? getRoute(selectedArrival.routeId) : undefined;
 
   const favoriteStops = stops.filter((stop) => stop.isFavorite);
-  const recentStops = recentStopIds
-    .map((stopId) => stops.find((stop) => stop.id === stopId))
-    .filter((stop): stop is Stop => Boolean(stop));
-  const nearbyStops = stops.filter((stop) => !stop.isFavorite && !recentStopIds.includes(stop.id));
+  const recentStops = recentStopViews
+    .map((recentStopView) => {
+      const stop = stops.find((candidateStop) => candidateStop.id === recentStopView.stopId);
+
+      return stop ? { ...recentStopView, stop } : undefined;
+    })
+    .filter((entry): entry is RecentStopView & { stop: Stop } => Boolean(entry));
+  const recentStopIds = new Set(recentStops.map((entry) => entry.stop.id));
+  const nearbyStops = stops.filter((stop) => !stop.isFavorite && !recentStopIds.has(stop.id));
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -182,8 +231,8 @@ export default function App() {
   }, [selectedStopId]);
 
   useEffect(() => {
-    window.localStorage.setItem(recentStopsStorageKey, JSON.stringify(recentStopIds));
-  }, [recentStopIds]);
+    window.localStorage.setItem(recentStopsStorageKey, JSON.stringify(recentStopViews));
+  }, [recentStopViews]);
 
   useEffect(() => {
     window.localStorage.setItem(activeLineStorageKey, activeLine);
@@ -230,7 +279,12 @@ export default function App() {
 
   const handleStopSelect = (stopId: string) => {
     setSelectedStopId(stopId);
-    setRecentStopIds((currentRecentStopIds) => [stopId, ...currentRecentStopIds.filter((id) => id !== stopId)].slice(0, 3));
+    setRecentStopViews((currentRecentStopViews) =>
+      [{ stopId, viewedAt: new Date().toISOString() }, ...currentRecentStopViews.filter((entry) => entry.stopId !== stopId)].slice(
+        0,
+        maxRecentStops,
+      ),
+    );
     setActiveLine('all');
     setSelectedArrivalId(getInitialSelectedArrivalId(stopId, 'all'));
   };
@@ -243,7 +297,11 @@ export default function App() {
     });
   };
 
-  const renderStopCard = (stop: Stop) => {
+  const handleRecentHistoryClear = () => {
+    setRecentStopViews([]);
+  };
+
+  const renderStopCard = (stop: Stop, metaLabel?: string) => {
     const isSelected = selectedStop?.id === stop.id;
 
     return (
@@ -265,6 +323,7 @@ export default function App() {
         </div>
         <span>Code {stop.code}</span>
         <span>Lines {stop.lines.join(', ')}</span>
+        {metaLabel ? <span className="recent-stop-meta">{metaLabel}</span> : null}
         <button type="button" className="stop-select-button" onClick={() => handleStopSelect(stop.id)}>
           {isSelected ? 'Viewing board' : 'View board'}
         </button>
@@ -336,20 +395,27 @@ export default function App() {
                   <p>No pinned stops yet.</p>
                 </div>
               ) : (
-                favoriteStops.map(renderStopCard)
+                favoriteStops.map((stop) => renderStopCard(stop))
               )}
             </div>
           </section>
 
           <section className="stop-group">
-            <div className="group-label">Recently viewed</div>
+            <div className="group-header">
+              <div className="group-label">Recently viewed</div>
+              {recentStops.length > 0 ? (
+                <button type="button" className="inline-action-button" onClick={handleRecentHistoryClear}>
+                  Clear history
+                </button>
+              ) : null}
+            </div>
             <div className="stop-list">
               {recentStops.length === 0 ? (
                 <div className="empty-state compact-empty-state">
                   <p>Your recently viewed stops will appear here.</p>
                 </div>
               ) : (
-                recentStops.map(renderStopCard)
+                recentStops.map(({ stop, viewedAt }) => renderStopCard(stop, formatRecentView(viewedAt)))
               )}
             </div>
           </section>
@@ -362,7 +428,7 @@ export default function App() {
                   <p>All non-pinned stops are already in your recent list.</p>
                 </div>
               ) : (
-                nearbyStops.map(renderStopCard)
+                nearbyStops.map((stop) => renderStopCard(stop))
               )}
             </div>
           </section>
