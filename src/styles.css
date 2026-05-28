@@ -69,7 +69,8 @@ p {
 .disruption-note,
 .route-stop p,
 .empty-state p,
-.recent-stop-meta {
+.recent-stop-meta,
+.group-caption {
   color: #94a3b8;
 }
 
@@ -199,10 +200,15 @@ p {
   align-items: flex-start;
 }
 
+.stop-card-actions,
 .stop-card-top > div {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.stop-card-actions {
+  align-items: flex-end;
 }
 
 .line-badge,
@@ -298,6 +304,16 @@ p {
 
 .inline-action-button {
   font-size: 12px;
+}
+
+.group-caption {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+
+.recent-history-summary {
+  margin-top: 10px;
+  font-size: 13px;
 }
 
 .pin-toggle.active {

@@ -301,7 +301,11 @@ export default function App() {
     setRecentStopViews([]);
   };
 
-  const renderStopCard = (stop: Stop, metaLabel?: string) => {
+  const handleRecentStopDismiss = (stopId: string) => {
+    setRecentStopViews((currentRecentStopViews) => currentRecentStopViews.filter((entry) => entry.stopId !== stopId));
+  };
+
+  const renderStopCard = (stop: Stop, options?: { metaLabel?: string; onDismiss?: () => void }) => {
     const isSelected = selectedStop?.id === stop.id;
 
     return (
@@ -311,19 +315,31 @@ export default function App() {
             <strong>{stop.name}</strong>
             <span>{stop.area}</span>
           </div>
-          <button
-            type="button"
-            className={`pin-toggle ${stop.isFavorite ? 'active' : ''}`}
-            onClick={() => handleFavoriteToggle(stop.id)}
-            aria-label={stop.isFavorite ? `Unpin ${stop.name}` : `Pin ${stop.name}`}
-            aria-pressed={stop.isFavorite}
-          >
-            {stop.isFavorite ? 'Pinned' : 'Pin'}
-          </button>
+          <div className="stop-card-actions">
+            {options?.onDismiss ? (
+              <button
+                type="button"
+                className="inline-action-button"
+                onClick={options.onDismiss}
+                aria-label={`Remove ${stop.name} from recent history`}
+              >
+                Remove
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={`pin-toggle ${stop.isFavorite ? 'active' : ''}`}
+              onClick={() => handleFavoriteToggle(stop.id)}
+              aria-label={stop.isFavorite ? `Unpin ${stop.name}` : `Pin ${stop.name}`}
+              aria-pressed={stop.isFavorite}
+            >
+              {stop.isFavorite ? 'Pinned' : 'Pin'}
+            </button>
+          </div>
         </div>
         <span>Code {stop.code}</span>
         <span>Lines {stop.lines.join(', ')}</span>
-        {metaLabel ? <span className="recent-stop-meta">{metaLabel}</span> : null}
+        {options?.metaLabel ? <span className="recent-stop-meta">{options.metaLabel}</span> : null}
         <button type="button" className="stop-select-button" onClick={() => handleStopSelect(stop.id)}>
           {isSelected ? 'Viewing board' : 'View board'}
         </button>
@@ -402,12 +418,21 @@ export default function App() {
 
           <section className="stop-group">
             <div className="group-header">
-              <div className="group-label">Recently viewed</div>
+              <div>
+                <div className="group-label">Recently viewed</div>
+                <p className="group-caption">
+                  Keeping your last {maxRecentStops} boards ready. Oldest stops drop off automatically once the list is full.
+                </p>
+              </div>
               {recentStops.length > 0 ? (
                 <button type="button" className="inline-action-button" onClick={handleRecentHistoryClear}>
                   Clear history
                 </button>
               ) : null}
+            </div>
+            <div className="board-summary recent-history-summary">
+              <span>{recentStops.length} saved recent stops</span>
+              <span>{recentStops.length === maxRecentStops ? 'History is full' : `${maxRecentStops - recentStops.length} open slots left`}</span>
             </div>
             <div className="stop-list">
               {recentStops.length === 0 ? (
@@ -415,7 +440,12 @@ export default function App() {
                   <p>Your recently viewed stops will appear here.</p>
                 </div>
               ) : (
-                recentStops.map(({ stop, viewedAt }) => renderStopCard(stop, formatRecentView(viewedAt)))
+                recentStops.map(({ stop, viewedAt }) =>
+                  renderStopCard(stop, {
+                    metaLabel: formatRecentView(viewedAt),
+                    onDismiss: () => handleRecentStopDismiss(stop.id),
+                  }),
+                )
               )}
             </div>
           </section>
