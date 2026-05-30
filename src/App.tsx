@@ -189,6 +189,19 @@ const formatRecentView = (value: string) => {
   return `Viewed ${new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(new Date(value))}`;
 };
 
+const getRecentStopRouteSummary = (stopId: string) => {
+  const stopArrivals = getStopArrivals(stopId);
+  const savedSelectedArrivalId = getSavedSelectedArrivals()[stopId];
+  const highlightedArrival =
+    stopArrivals.find((arrival) => arrival.id === savedSelectedArrivalId) ?? stopArrivals[0];
+
+  if (!highlightedArrival) {
+    return 'No mock arrivals saved for this stop yet';
+  }
+
+  return `Line ${highlightedArrival.line} to ${highlightedArrival.destination} · ${getMinutesUntil(highlightedArrival.expectedAt)}`;
+};
+
 export default function App() {
   const [stops, setStops] = useState<Stop[]>(() => initialStops);
   const [selectedStopId, setSelectedStopId] = useState(() => getInitialSelectedStopId());
@@ -305,7 +318,10 @@ export default function App() {
     setRecentStopViews((currentRecentStopViews) => currentRecentStopViews.filter((entry) => entry.stopId !== stopId));
   };
 
-  const renderStopCard = (stop: Stop, options?: { metaLabel?: string; onDismiss?: () => void }) => {
+  const renderStopCard = (
+    stop: Stop,
+    options?: { metaLabel?: string; detailLabel?: string; onDismiss?: () => void },
+  ) => {
     const isSelected = selectedStop?.id === stop.id;
 
     return (
@@ -340,6 +356,7 @@ export default function App() {
         <span>Code {stop.code}</span>
         <span>Lines {stop.lines.join(', ')}</span>
         {options?.metaLabel ? <span className="recent-stop-meta">{options.metaLabel}</span> : null}
+        {options?.detailLabel ? <span className="recent-stop-detail">{options.detailLabel}</span> : null}
         <button type="button" className="stop-select-button" onClick={() => handleStopSelect(stop.id)}>
           {isSelected ? 'Viewing board' : 'View board'}
         </button>
@@ -443,6 +460,7 @@ export default function App() {
                 recentStops.map(({ stop, viewedAt }) =>
                   renderStopCard(stop, {
                     metaLabel: formatRecentView(viewedAt),
+                    detailLabel: getRecentStopRouteSummary(stop.id),
                     onDismiss: () => handleRecentStopDismiss(stop.id),
                   }),
                 )

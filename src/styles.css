@@ -70,6 +70,7 @@ p {
 .route-stop p,
 .empty-state p,
 .recent-stop-meta,
+.recent-stop-detail,
 .group-caption {
   color: #94a3b8;
 }
@@ -331,8 +332,13 @@ p {
   cursor: pointer;
 }
 
-.recent-stop-meta {
+.recent-stop-meta,
+.recent-stop-detail {
   font-size: 13px;
+}
+
+.recent-stop-detail {
+  color: #cbd5e1;
 }
 
 .panel-header-row {
