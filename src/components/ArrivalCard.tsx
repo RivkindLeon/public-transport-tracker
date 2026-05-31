@@ -9,7 +9,11 @@ type ArrivalCardProps = {
   onSelect: (arrivalId: string) => void;
 };
 
-export function ArrivalCard({ arrival, isSelected, onSelect }: ArrivalCardProps) {
+export function ArrivalCard({
+  arrival,
+  isSelected,
+  onSelect,
+}: ArrivalCardProps) {
   return (
     <button
       type="button"
@@ -17,10 +21,17 @@ export function ArrivalCard({ arrival, isSelected, onSelect }: ArrivalCardProps)
       onClick={() => onSelect(arrival.id)}
     >
       <div className="arrival-card-top">
-        <div className="line-badge" style={{ backgroundColor: getRoute(arrival.routeId)?.color ?? '#0f172a' }}>
+        <div
+          className="line-badge"
+          style={{
+            backgroundColor: getRoute(arrival.routeId)?.color ?? '#0f172a',
+          }}
+        >
           {arrival.line}
         </div>
-        <span className={`status-pill status-${arrival.status}`}>{statusLabels[arrival.status]}</span>
+        <span className={`status-pill status-${arrival.status}`}>
+          {statusLabels[arrival.status]}
+        </span>
       </div>
       <strong>{arrival.destination}</strong>
       <div className="arrival-meta">
@@ -31,7 +42,9 @@ export function ArrivalCard({ arrival, isSelected, onSelect }: ArrivalCardProps)
         <span>Scheduled {formatTime(arrival.scheduledAt)}</span>
         <span>Platform {arrival.platform ?? 'TBD'}</span>
       </div>
-      {arrival.disruptionNote ? <p className="disruption-note">{arrival.disruptionNote}</p> : null}
+      {arrival.disruptionNote ? (
+        <p className="disruption-note">{arrival.disruptionNote}</p>
+      ) : null}
     </button>
   );
 }

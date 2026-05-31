@@ -63,7 +63,11 @@ export function ArrivalsPanel({
 
       <div className="board-summary">
         <span>{arrivals.length} visible arrivals</span>
-        <span>{activeLine === 'all' ? 'Showing every line' : `Filtered to line ${activeLine}`}</span>
+        <span>
+          {activeLine === 'all'
+            ? 'Showing every line'
+            : `Filtered to line ${activeLine}`}
+        </span>
       </div>
 
       <div className="arrival-list">

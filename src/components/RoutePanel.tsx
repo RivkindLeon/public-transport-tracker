@@ -8,7 +8,11 @@ type RoutePanelProps = {
   selectedStop: Stop;
 };
 
-export function RoutePanel({ selectedArrival, selectedRoute, selectedStop }: RoutePanelProps) {
+export function RoutePanel({
+  selectedArrival,
+  selectedRoute,
+  selectedStop,
+}: RoutePanelProps) {
   return (
     <aside className="panel route-panel">
       {selectedArrival && selectedRoute ? (
@@ -19,13 +23,17 @@ export function RoutePanel({ selectedArrival, selectedRoute, selectedStop }: Rou
           </div>
 
           <div className="route-highlight">
-            <div className="line-badge large" style={{ backgroundColor: selectedRoute.color }}>
+            <div
+              className="line-badge large"
+              style={{ backgroundColor: selectedRoute.color }}
+            >
               {selectedRoute.line}
             </div>
             <div>
               <span className="detail-label">Selected arrival</span>
               <strong>
-                {formatTime(selectedArrival.expectedAt)} · {statusLabels[selectedArrival.status]}
+                {formatTime(selectedArrival.expectedAt)} ·{' '}
+                {statusLabels[selectedArrival.status]}
               </strong>
             </div>
           </div>
@@ -60,11 +68,18 @@ export function RoutePanel({ selectedArrival, selectedRoute, selectedStop }: Rou
             <h3>Ordered stops</h3>
             <div className="route-stop-list">
               {selectedRoute.stops.map((stop) => (
-                <article key={stop.stopId} className={`route-stop ${stop.stopId === selectedStop.id ? 'current' : ''}`}>
+                <article
+                  key={stop.stopId}
+                  className={`route-stop ${stop.stopId === selectedStop.id ? 'current' : ''}`}
+                >
                   <span className="route-stop-order">{stop.order}</span>
                   <div>
                     <strong>{stop.stopName}</strong>
-                    <p>{stop.stopId === selectedStop.id ? 'Current board selection' : 'Served by this route'}</p>
+                    <p>
+                      {stop.stopId === selectedStop.id
+                        ? 'Current board selection'
+                        : 'Served by this route'}
+                    </p>
                   </div>
                 </article>
               ))}

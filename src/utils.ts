@@ -21,7 +21,9 @@ export const getSavedSelectedArrivals = () => {
     return {} as Record<string, string>;
   }
 
-  const savedSelectedArrivals = window.localStorage.getItem(storageKeys.selectedArrivals);
+  const savedSelectedArrivals = window.localStorage.getItem(
+    storageKeys.selectedArrivals,
+  );
 
   if (!savedSelectedArrivals) {
     return {} as Record<string, string>;
@@ -39,14 +41,18 @@ export const getInitialStops = () => {
     return sortStops(snapshot.stops);
   }
 
-  const savedFavoriteStopIds = window.localStorage.getItem(storageKeys.favoriteStops);
+  const savedFavoriteStopIds = window.localStorage.getItem(
+    storageKeys.favoriteStops,
+  );
 
   if (!savedFavoriteStopIds) {
     return sortStops(snapshot.stops);
   }
 
   try {
-    const favoriteStopIds = new Set(JSON.parse(savedFavoriteStopIds) as string[]);
+    const favoriteStopIds = new Set(
+      JSON.parse(savedFavoriteStopIds) as string[],
+    );
 
     return sortStops(
       snapshot.stops.map((stop) => ({
@@ -66,9 +72,14 @@ export const getInitialSelectedStopId = () => {
     return initialStops[0]?.id ?? '';
   }
 
-  const savedSelectedStopId = window.localStorage.getItem(storageKeys.selectedStop);
+  const savedSelectedStopId = window.localStorage.getItem(
+    storageKeys.selectedStop,
+  );
 
-  if (savedSelectedStopId && initialStops.some((stop) => stop.id === savedSelectedStopId)) {
+  if (
+    savedSelectedStopId &&
+    initialStops.some((stop) => stop.id === savedSelectedStopId)
+  ) {
     return savedSelectedStopId;
   }
 
@@ -83,20 +94,32 @@ export const getInitialActiveLine = (selectedStopId: string) => {
   const savedActiveLine = window.localStorage.getItem(storageKeys.activeLine);
   const selectedStop = initialStops.find((stop) => stop.id === selectedStopId);
 
-  if (savedActiveLine && savedActiveLine !== 'all' && selectedStop?.lines.includes(savedActiveLine)) {
+  if (
+    savedActiveLine &&
+    savedActiveLine !== 'all' &&
+    selectedStop?.lines.includes(savedActiveLine)
+  ) {
     return savedActiveLine;
   }
 
   return 'all';
 };
 
-export const getInitialSelectedArrivalId = (selectedStopId: string, lineFilter: 'all' | string) => {
+export const getInitialSelectedArrivalId = (
+  selectedStopId: string,
+  lineFilter: 'all' | string,
+) => {
   const stopArrivals = getStopArrivals(selectedStopId);
   const savedSelectedArrivalId = getSavedSelectedArrivals()[selectedStopId];
   const visibleArrivals =
-    lineFilter === 'all' ? stopArrivals : stopArrivals.filter((arrival) => arrival.line === lineFilter);
+    lineFilter === 'all'
+      ? stopArrivals
+      : stopArrivals.filter((arrival) => arrival.line === lineFilter);
 
-  if (savedSelectedArrivalId && visibleArrivals.some((arrival) => arrival.id === savedSelectedArrivalId)) {
+  if (
+    savedSelectedArrivalId &&
+    visibleArrivals.some((arrival) => arrival.id === savedSelectedArrivalId)
+  ) {
     return savedSelectedArrivalId;
   }
 
@@ -108,14 +131,18 @@ export const getInitialRecentStopViews = () => {
     return [] as RecentStopView[];
   }
 
-  const savedRecentStopViews = window.localStorage.getItem(storageKeys.recentStops);
+  const savedRecentStopViews = window.localStorage.getItem(
+    storageKeys.recentStops,
+  );
 
   if (!savedRecentStopViews) {
     return [] as RecentStopView[];
   }
 
   try {
-    const parsedRecentStopViews = JSON.parse(savedRecentStopViews) as RecentStopView[] | string[];
+    const parsedRecentStopViews = JSON.parse(savedRecentStopViews) as
+      | RecentStopView[]
+      | string[];
 
     if (!Array.isArray(parsedRecentStopViews)) {
       return [] as RecentStopView[];
@@ -177,7 +204,9 @@ export const formatRecentView = (value: string) => {
 export const getRecentStopRouteSummary = (stopId: string) => {
   const stopArrivals = getStopArrivals(stopId);
   const savedSelectedArrivalId = getSavedSelectedArrivals()[stopId];
-  const highlightedArrival = stopArrivals.find((arrival) => arrival.id === savedSelectedArrivalId) ?? stopArrivals[0];
+  const highlightedArrival =
+    stopArrivals.find((arrival) => arrival.id === savedSelectedArrivalId) ??
+    stopArrivals[0];
 
   if (!highlightedArrival) {
     return 'No mock arrivals saved for this stop yet';

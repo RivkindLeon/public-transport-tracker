@@ -34,7 +34,9 @@ export default function App() {
           <p className="eyebrow">Mocked arrivals milestone</p>
           <h1>Public Transport Tracker</h1>
           <p className="page-subtitle">
-            Browse saved and nearby stops, pin the places you care about most, inspect the next arrivals, and open the selected route without needing a live provider yet.
+            Browse saved and nearby stops, pin the places you care about most,
+            inspect the next arrivals, and open the selected route without
+            needing a live provider yet.
           </p>
         </div>
         <div className="summary-card">
@@ -69,7 +71,11 @@ export default function App() {
           selectedArrivalId={selectedArrivalId}
         />
 
-        <RoutePanel selectedArrival={selectedArrival} selectedRoute={selectedRoute} selectedStop={selectedStop} />
+        <RoutePanel
+          selectedArrival={selectedArrival}
+          selectedRoute={selectedRoute}
+          selectedStop={selectedStop}
+        />
       </main>
     </div>
   );

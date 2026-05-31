@@ -41,7 +41,9 @@ export function StopCard({
             type="button"
             className={`pin-toggle ${stop.isFavorite ? 'active' : ''}`}
             onClick={() => onFavoriteToggle(stop.id)}
-            aria-label={stop.isFavorite ? `Unpin ${stop.name}` : `Pin ${stop.name}`}
+            aria-label={
+              stop.isFavorite ? `Unpin ${stop.name}` : `Pin ${stop.name}`
+            }
             aria-pressed={stop.isFavorite}
           >
             {stop.isFavorite ? 'Pinned' : 'Pin'}
@@ -51,8 +53,14 @@ export function StopCard({
       <span>Code {stop.code}</span>
       <span>Lines {stop.lines.join(', ')}</span>
       {metaLabel ? <span className="recent-stop-meta">{metaLabel}</span> : null}
-      {detailLabel ? <span className="recent-stop-detail">{detailLabel}</span> : null}
-      <button type="button" className="stop-select-button" onClick={() => onSelect(stop.id)}>
+      {detailLabel ? (
+        <span className="recent-stop-detail">{detailLabel}</span>
+      ) : null}
+      <button
+        type="button"
+        className="stop-select-button"
+        onClick={() => onSelect(stop.id)}
+      >
         {isSelected ? 'Viewing board' : 'View board'}
       </button>
     </article>

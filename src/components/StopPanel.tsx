@@ -1,6 +1,10 @@
 import { maxRecentStops } from '../constants';
 import type { Stop } from '../types';
-import { formatRecentView, getRecentStopRouteSummary, type RecentStopView } from '../utils';
+import {
+  formatRecentView,
+  getRecentStopRouteSummary,
+  type RecentStopView,
+} from '../utils';
 import { StopCard } from './StopCard';
 
 type RecentStopEntry = RecentStopView & { stop: Stop };
@@ -26,7 +30,14 @@ export function StopPanel({
   onRecentHistoryClear,
   onRecentStopDismiss,
 }: StopPanelProps) {
-  const renderStopCard = (stop: Stop, options?: { metaLabel?: string; detailLabel?: string; onDismiss?: () => void }) => (
+  const renderStopCard = (
+    stop: Stop,
+    options?: {
+      metaLabel?: string;
+      detailLabel?: string;
+      onDismiss?: () => void;
+    },
+  ) => (
     <StopCard
       key={stop.id}
       stop={stop}
@@ -43,7 +54,10 @@ export function StopPanel({
     <aside className="panel stop-panel">
       <div className="panel-header">
         <h2>Stops</h2>
-        <p>Pick a stop to view its arrival board and pin or unpin it from the list.</p>
+        <p>
+          Pick a stop to view its arrival board and pin or unpin it from the
+          list.
+        </p>
       </div>
 
       <section className="stop-group">
@@ -64,18 +78,27 @@ export function StopPanel({
           <div>
             <div className="group-label">Recently viewed</div>
             <p className="group-caption">
-              Keeping your last {maxRecentStops} boards ready. Oldest stops drop off automatically once the list is full.
+              Keeping your last {maxRecentStops} boards ready. Oldest stops drop
+              off automatically once the list is full.
             </p>
           </div>
           {recentStops.length > 0 ? (
-            <button type="button" className="inline-action-button" onClick={onRecentHistoryClear}>
+            <button
+              type="button"
+              className="inline-action-button"
+              onClick={onRecentHistoryClear}
+            >
               Clear history
             </button>
           ) : null}
         </div>
         <div className="board-summary recent-history-summary">
           <span>{recentStops.length} saved recent stops</span>
-          <span>{recentStops.length === maxRecentStops ? 'History is full' : `${maxRecentStops - recentStops.length} open slots left`}</span>
+          <span>
+            {recentStops.length === maxRecentStops
+              ? 'History is full'
+              : `${maxRecentStops - recentStops.length} open slots left`}
+          </span>
         </div>
         <div className="stop-list">
           {recentStops.length === 0 ? (
