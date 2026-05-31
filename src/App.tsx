@@ -1,398 +1,31 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getRoute, getStopArrivals, getTransportSnapshot } from './data/mockData';
-import type { Arrival, ArrivalStatus, Stop } from './types';
-
-const snapshot = getTransportSnapshot();
-const favoriteStopsStorageKey = 'public-transport-tracker.favorite-stop-ids';
-const selectedStopStorageKey = 'public-transport-tracker.selected-stop-id';
-const activeLineStorageKey = 'public-transport-tracker.active-line';
-const selectedArrivalStorageKey = 'public-transport-tracker.selected-arrivals';
-const recentStopsStorageKey = 'public-transport-tracker.recent-stop-views';
-const maxRecentStops = 5;
-
-type RecentStopView = {
-  stopId: string;
-  viewedAt: string;
-};
-
-const sortStops = (stops: Stop[]) =>
-  [...stops].sort((left, right) => {
-    if (left.isFavorite === right.isFavorite) {
-      return left.name.localeCompare(right.name);
-    }
-
-    return left.isFavorite ? -1 : 1;
-  });
-
-const getInitialStops = () => {
-  if (typeof window === 'undefined') {
-    return sortStops(snapshot.stops);
-  }
-
-  const savedFavoriteStopIds = window.localStorage.getItem(favoriteStopsStorageKey);
-
-  if (!savedFavoriteStopIds) {
-    return sortStops(snapshot.stops);
-  }
-
-  try {
-    const favoriteStopIds = new Set(JSON.parse(savedFavoriteStopIds) as string[]);
-
-    return sortStops(
-      snapshot.stops.map((stop) => ({
-        ...stop,
-        isFavorite: favoriteStopIds.has(stop.id),
-      })),
-    );
-  } catch {
-    return sortStops(snapshot.stops);
-  }
-};
-
-const initialStops = getInitialStops();
-
-const getInitialSelectedStopId = () => {
-  if (typeof window === 'undefined') {
-    return initialStops[0]?.id ?? '';
-  }
-
-  const savedSelectedStopId = window.localStorage.getItem(selectedStopStorageKey);
-
-  if (savedSelectedStopId && initialStops.some((stop) => stop.id === savedSelectedStopId)) {
-    return savedSelectedStopId;
-  }
-
-  return initialStops[0]?.id ?? '';
-};
-
-const getInitialActiveLine = (selectedStopId: string) => {
-  if (typeof window === 'undefined') {
-    return 'all';
-  }
-
-  const savedActiveLine = window.localStorage.getItem(activeLineStorageKey);
-  const selectedStop = initialStops.find((stop) => stop.id === selectedStopId);
-
-  if (savedActiveLine && savedActiveLine !== 'all' && selectedStop?.lines.includes(savedActiveLine)) {
-    return savedActiveLine;
-  }
-
-  return 'all';
-};
-
-const getSavedSelectedArrivals = () => {
-  if (typeof window === 'undefined') {
-    return {} as Record<string, string>;
-  }
-
-  const savedSelectedArrivals = window.localStorage.getItem(selectedArrivalStorageKey);
-
-  if (!savedSelectedArrivals) {
-    return {} as Record<string, string>;
-  }
-
-  try {
-    return JSON.parse(savedSelectedArrivals) as Record<string, string>;
-  } catch {
-    return {} as Record<string, string>;
-  }
-};
-
-const getInitialSelectedArrivalId = (selectedStopId: string, lineFilter: 'all' | string) => {
-  const stopArrivals = getStopArrivals(selectedStopId);
-  const savedSelectedArrivalId = getSavedSelectedArrivals()[selectedStopId];
-  const visibleArrivals =
-    lineFilter === 'all' ? stopArrivals : stopArrivals.filter((arrival) => arrival.line === lineFilter);
-
-  if (savedSelectedArrivalId && visibleArrivals.some((arrival) => arrival.id === savedSelectedArrivalId)) {
-    return savedSelectedArrivalId;
-  }
-
-  return visibleArrivals[0]?.id ?? '';
-};
-
-const getInitialRecentStopViews = () => {
-  if (typeof window === 'undefined') {
-    return [] as RecentStopView[];
-  }
-
-  const savedRecentStopViews = window.localStorage.getItem(recentStopsStorageKey);
-
-  if (!savedRecentStopViews) {
-    return [] as RecentStopView[];
-  }
-
-  try {
-    const parsedRecentStopViews = JSON.parse(savedRecentStopViews) as RecentStopView[] | string[];
-
-    if (!Array.isArray(parsedRecentStopViews)) {
-      return [] as RecentStopView[];
-    }
-
-    if (parsedRecentStopViews.every((entry) => typeof entry === 'string')) {
-      return (parsedRecentStopViews as string[])
-        .filter((stopId) => initialStops.some((stop) => stop.id === stopId))
-        .map((stopId) => ({ stopId, viewedAt: snapshot.generatedAt }));
-    }
-
-    return (parsedRecentStopViews as RecentStopView[])
-      .filter(
-        (entry) =>
-          typeof entry?.stopId === 'string' &&
-          typeof entry?.viewedAt === 'string' &&
-          initialStops.some((stop) => stop.id === entry.stopId),
-      )
-      .slice(0, maxRecentStops);
-  } catch {
-    return [] as RecentStopView[];
-  }
-};
-
-const statusLabels: Record<ArrivalStatus, string> = {
-  'on-time': 'On time',
-  delayed: 'Delayed',
-  boarding: 'Boarding',
-  cancelled: 'Cancelled',
-};
-
-const formatTime = (value: string) =>
-  new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
-
-const getMinutesUntil = (value: string) => {
-  const deltaMs = new Date(value).getTime() - Date.now();
-  const minutes = Math.max(0, Math.round(deltaMs / 60_000));
-
-  return minutes === 0 ? 'Due now' : `${minutes} min`;
-};
-
-const formatRecentView = (value: string) => {
-  const deltaMs = Date.now() - new Date(value).getTime();
-  const minutes = Math.max(0, Math.round(deltaMs / 60_000));
-
-  if (minutes < 1) {
-    return 'Viewed just now';
-  }
-
-  if (minutes < 60) {
-    return `Viewed ${minutes} min ago`;
-  }
-
-  const hours = Math.round(minutes / 60);
-
-  if (hours < 24) {
-    return `Viewed ${hours}h ago`;
-  }
-
-  return `Viewed ${new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(new Date(value))}`;
-};
-
-const getRecentStopRouteSummary = (stopId: string) => {
-  const stopArrivals = getStopArrivals(stopId);
-  const savedSelectedArrivalId = getSavedSelectedArrivals()[stopId];
-  const highlightedArrival =
-    stopArrivals.find((arrival) => arrival.id === savedSelectedArrivalId) ?? stopArrivals[0];
-
-  if (!highlightedArrival) {
-    return 'No mock arrivals saved for this stop yet';
-  }
-
-  return `Line ${highlightedArrival.line} to ${highlightedArrival.destination} · ${getMinutesUntil(highlightedArrival.expectedAt)}`;
-};
+import { ArrivalsPanel } from './components/ArrivalsPanel';
+import { RoutePanel } from './components/RoutePanel';
+import { StopPanel } from './components/StopPanel';
+import { useTransportTrackerState } from './hooks/useTransportTrackerState';
+import { formatTime } from './utils';
 
 export default function App() {
-  const [stops, setStops] = useState<Stop[]>(() => initialStops);
-  const [selectedStopId, setSelectedStopId] = useState(() => getInitialSelectedStopId());
-  const [recentStopViews, setRecentStopViews] = useState<RecentStopView[]>(() => getInitialRecentStopViews());
-  const [activeLine, setActiveLine] = useState<'all' | string>(() => getInitialActiveLine(getInitialSelectedStopId()));
-  const stopArrivals = useMemo(() => getStopArrivals(selectedStopId), [selectedStopId]);
-  const [selectedArrivalId, setSelectedArrivalId] = useState(() =>
-    getInitialSelectedArrivalId(getInitialSelectedStopId(), getInitialActiveLine(getInitialSelectedStopId())),
-  );
-
-  const selectedStop = stops.find((stop) => stop.id === selectedStopId) ?? stops[0];
-  const availableLines = selectedStop?.lines ?? [];
-  const arrivals = useMemo(
-    () => (activeLine === 'all' ? stopArrivals : stopArrivals.filter((arrival) => arrival.line === activeLine)),
-    [activeLine, stopArrivals],
-  );
-  const selectedArrival = arrivals.find((arrival) => arrival.id === selectedArrivalId) ?? arrivals[0];
-  const selectedRoute = selectedArrival ? getRoute(selectedArrival.routeId) : undefined;
-
-  const favoriteStops = stops.filter((stop) => stop.isFavorite);
-  const recentStops = recentStopViews
-    .map((recentStopView) => {
-      const stop = stops.find((candidateStop) => candidateStop.id === recentStopView.stopId);
-
-      return stop ? { ...recentStopView, stop } : undefined;
-    })
-    .filter((entry): entry is RecentStopView & { stop: Stop } => Boolean(entry));
-  const recentStopIds = new Set(recentStops.map((entry) => entry.stop.id));
-  const nearbyStops = stops.filter((stop) => !stop.isFavorite && !recentStopIds.has(stop.id));
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      favoriteStopsStorageKey,
-      JSON.stringify(stops.filter((stop) => stop.isFavorite).map((stop) => stop.id)),
-    );
-  }, [stops]);
-
-  useEffect(() => {
-    window.localStorage.setItem(selectedStopStorageKey, selectedStopId);
-  }, [selectedStopId]);
-
-  useEffect(() => {
-    window.localStorage.setItem(recentStopsStorageKey, JSON.stringify(recentStopViews));
-  }, [recentStopViews]);
-
-  useEffect(() => {
-    window.localStorage.setItem(activeLineStorageKey, activeLine);
-  }, [activeLine]);
-
-  useEffect(() => {
-    const savedSelectedArrivals = getSavedSelectedArrivals();
-
-    if (selectedArrivalId) {
-      window.localStorage.setItem(
-        selectedArrivalStorageKey,
-        JSON.stringify({
-          ...savedSelectedArrivals,
-          [selectedStopId]: selectedArrivalId,
-        }),
-      );
-      return;
-    }
-
-    if (!savedSelectedArrivals[selectedStopId]) {
-      return;
-    }
-
-    const { [selectedStopId]: _removedSelectedArrival, ...remainingSelectedArrivals } = savedSelectedArrivals;
-    window.localStorage.setItem(selectedArrivalStorageKey, JSON.stringify(remainingSelectedArrivals));
-  }, [selectedArrivalId, selectedStopId]);
-
-  useEffect(() => {
-    if (!availableLines.includes(activeLine)) {
-      setActiveLine('all');
-    }
-  }, [activeLine, availableLines]);
-
-  useEffect(() => {
-    if (!arrivals.some((arrival) => arrival.id === selectedArrivalId)) {
-      const savedSelectedArrivalId = getSavedSelectedArrivals()[selectedStopId];
-      const nextSelectedArrivalId = arrivals.some((arrival) => arrival.id === savedSelectedArrivalId)
-        ? savedSelectedArrivalId
-        : arrivals[0]?.id ?? '';
-
-      setSelectedArrivalId(nextSelectedArrivalId);
-    }
-  }, [arrivals, selectedArrivalId, selectedStopId]);
-
-  const handleStopSelect = (stopId: string) => {
-    setSelectedStopId(stopId);
-    setRecentStopViews((currentRecentStopViews) =>
-      [{ stopId, viewedAt: new Date().toISOString() }, ...currentRecentStopViews.filter((entry) => entry.stopId !== stopId)].slice(
-        0,
-        maxRecentStops,
-      ),
-    );
-    setActiveLine('all');
-    setSelectedArrivalId(getInitialSelectedArrivalId(stopId, 'all'));
-  };
-
-  const handleFavoriteToggle = (stopId: string) => {
-    setStops((currentStops) => {
-      return sortStops(
-        currentStops.map((stop) => (stop.id === stopId ? { ...stop, isFavorite: !stop.isFavorite } : stop)),
-      );
-    });
-  };
-
-  const handleRecentHistoryClear = () => {
-    setRecentStopViews([]);
-  };
-
-  const handleRecentStopDismiss = (stopId: string) => {
-    setRecentStopViews((currentRecentStopViews) => currentRecentStopViews.filter((entry) => entry.stopId !== stopId));
-  };
-
-  const renderStopCard = (
-    stop: Stop,
-    options?: { metaLabel?: string; detailLabel?: string; onDismiss?: () => void },
-  ) => {
-    const isSelected = selectedStop?.id === stop.id;
-
-    return (
-      <article key={stop.id} className={`stop-card ${isSelected ? 'selected' : ''}`}>
-        <div className="stop-card-top">
-          <div>
-            <strong>{stop.name}</strong>
-            <span>{stop.area}</span>
-          </div>
-          <div className="stop-card-actions">
-            {options?.onDismiss ? (
-              <button
-                type="button"
-                className="inline-action-button"
-                onClick={options.onDismiss}
-                aria-label={`Remove ${stop.name} from recent history`}
-              >
-                Remove
-              </button>
-            ) : null}
-            <button
-              type="button"
-              className={`pin-toggle ${stop.isFavorite ? 'active' : ''}`}
-              onClick={() => handleFavoriteToggle(stop.id)}
-              aria-label={stop.isFavorite ? `Unpin ${stop.name}` : `Pin ${stop.name}`}
-              aria-pressed={stop.isFavorite}
-            >
-              {stop.isFavorite ? 'Pinned' : 'Pin'}
-            </button>
-          </div>
-        </div>
-        <span>Code {stop.code}</span>
-        <span>Lines {stop.lines.join(', ')}</span>
-        {options?.metaLabel ? <span className="recent-stop-meta">{options.metaLabel}</span> : null}
-        {options?.detailLabel ? <span className="recent-stop-detail">{options.detailLabel}</span> : null}
-        <button type="button" className="stop-select-button" onClick={() => handleStopSelect(stop.id)}>
-          {isSelected ? 'Viewing board' : 'View board'}
-        </button>
-      </article>
-    );
-  };
-
-  const renderArrivalCard = (arrival: Arrival) => {
-    const isSelected = arrival.id === selectedArrival?.id;
-
-    return (
-      <button
-        key={arrival.id}
-        type="button"
-        className={`arrival-card ${isSelected ? 'selected' : ''}`}
-        onClick={() => setSelectedArrivalId(arrival.id)}
-      >
-        <div className="arrival-card-top">
-          <div className="line-badge" style={{ backgroundColor: getRoute(arrival.routeId)?.color ?? '#0f172a' }}>
-            {arrival.line}
-          </div>
-          <span className={`status-pill status-${arrival.status}`}>{statusLabels[arrival.status]}</span>
-        </div>
-        <strong>{arrival.destination}</strong>
-        <div className="arrival-meta">
-          <span>Expected {formatTime(arrival.expectedAt)}</span>
-          <span>{getMinutesUntil(arrival.expectedAt)}</span>
-        </div>
-        <div className="arrival-meta muted">
-          <span>Scheduled {formatTime(arrival.scheduledAt)}</span>
-          <span>Platform {arrival.platform ?? 'TBD'}</span>
-        </div>
-        {arrival.disruptionNote ? <p className="disruption-note">{arrival.disruptionNote}</p> : null}
-      </button>
-    );
-  };
+  const {
+    snapshot,
+    stops,
+    selectedStop,
+    selectedStopId,
+    favoriteStops,
+    recentStops,
+    nearbyStops,
+    activeLine,
+    availableLines,
+    arrivals,
+    selectedArrival,
+    selectedArrivalId,
+    selectedRoute,
+    setActiveLine,
+    setSelectedArrivalId,
+    handleStopSelect,
+    handleFavoriteToggle,
+    handleRecentHistoryClear,
+    handleRecentStopDismiss,
+  } = useTransportTrackerState();
 
   return (
     <div className="app-shell">
@@ -401,7 +34,9 @@ export default function App() {
           <p className="eyebrow">Mocked arrivals milestone</p>
           <h1>Public Transport Tracker</h1>
           <p className="page-subtitle">
-            Browse saved and nearby stops, pin the places you care about most, inspect the next arrivals, and open the selected route without needing a live provider yet.
+            Browse saved and nearby stops, pin the places you care about most,
+            inspect the next arrivals, and open the selected route without
+            needing a live provider yet.
           </p>
         </div>
         <div className="summary-card">
@@ -414,199 +49,33 @@ export default function App() {
       </header>
 
       <main className="layout-grid">
-        <aside className="panel stop-panel">
-          <div className="panel-header">
-            <h2>Stops</h2>
-            <p>Pick a stop to view its arrival board and pin or unpin it from the list.</p>
-          </div>
+        <StopPanel
+          favoriteStops={favoriteStops}
+          nearbyStops={nearbyStops}
+          recentStops={recentStops}
+          selectedStopId={selectedStopId}
+          onStopSelect={handleStopSelect}
+          onFavoriteToggle={handleFavoriteToggle}
+          onRecentHistoryClear={handleRecentHistoryClear}
+          onRecentStopDismiss={handleRecentStopDismiss}
+        />
 
-          <section className="stop-group">
-            <div className="group-label">Pinned stops</div>
-            <div className="stop-list">
-              {favoriteStops.length === 0 ? (
-                <div className="empty-state compact-empty-state">
-                  <p>No pinned stops yet.</p>
-                </div>
-              ) : (
-                favoriteStops.map((stop) => renderStopCard(stop))
-              )}
-            </div>
-          </section>
+        <ArrivalsPanel
+          selectedStop={selectedStop}
+          activeLine={activeLine}
+          availableLines={availableLines}
+          arrivals={arrivals}
+          onActiveLineChange={setActiveLine}
+          onFavoriteToggle={handleFavoriteToggle}
+          onArrivalSelect={setSelectedArrivalId}
+          selectedArrivalId={selectedArrivalId}
+        />
 
-          <section className="stop-group">
-            <div className="group-header">
-              <div>
-                <div className="group-label">Recently viewed</div>
-                <p className="group-caption">
-                  Keeping your last {maxRecentStops} boards ready. Oldest stops drop off automatically once the list is full.
-                </p>
-              </div>
-              {recentStops.length > 0 ? (
-                <button type="button" className="inline-action-button" onClick={handleRecentHistoryClear}>
-                  Clear history
-                </button>
-              ) : null}
-            </div>
-            <div className="board-summary recent-history-summary">
-              <span>{recentStops.length} saved recent stops</span>
-              <span>{recentStops.length === maxRecentStops ? 'History is full' : `${maxRecentStops - recentStops.length} open slots left`}</span>
-            </div>
-            <div className="stop-list">
-              {recentStops.length === 0 ? (
-                <div className="empty-state compact-empty-state">
-                  <p>Your recently viewed stops will appear here.</p>
-                </div>
-              ) : (
-                recentStops.map(({ stop, viewedAt }) =>
-                  renderStopCard(stop, {
-                    metaLabel: formatRecentView(viewedAt),
-                    detailLabel: getRecentStopRouteSummary(stop.id),
-                    onDismiss: () => handleRecentStopDismiss(stop.id),
-                  }),
-                )
-              )}
-            </div>
-          </section>
-
-          <section className="stop-group">
-            <div className="group-label">Nearby stops</div>
-            <div className="stop-list">
-              {nearbyStops.length === 0 ? (
-                <div className="empty-state compact-empty-state">
-                  <p>All non-pinned stops are already in your recent list.</p>
-                </div>
-              ) : (
-                nearbyStops.map((stop) => renderStopCard(stop))
-              )}
-            </div>
-          </section>
-        </aside>
-
-        <section className="panel arrivals-panel">
-          <div className="panel-header panel-header-row">
-            <div>
-              <h2>{selectedStop.name}</h2>
-              <p>
-                {selectedStop.area} · Stop {selectedStop.code}
-              </p>
-            </div>
-            <button
-              type="button"
-              className={`pin-toggle ${selectedStop.isFavorite ? 'active' : ''}`}
-              onClick={() => handleFavoriteToggle(selectedStop.id)}
-              aria-pressed={selectedStop.isFavorite}
-            >
-              {selectedStop.isFavorite ? 'Pinned stop' : 'Pin stop'}
-            </button>
-          </div>
-
-          <div className="filter-toolbar" aria-label="Arrival line filters">
-            <button
-              type="button"
-              className={`filter-chip ${activeLine === 'all' ? 'selected' : ''}`}
-              onClick={() => setActiveLine('all')}
-            >
-              All lines
-            </button>
-            {availableLines.map((line) => (
-              <button
-                key={line}
-                type="button"
-                className={`filter-chip ${activeLine === line ? 'selected' : ''}`}
-                onClick={() => setActiveLine(line)}
-              >
-                Line {line}
-              </button>
-            ))}
-          </div>
-
-          <div className="board-summary">
-            <span>{arrivals.length} visible arrivals</span>
-            <span>{activeLine === 'all' ? 'Showing every line' : `Filtered to line ${activeLine}`}</span>
-          </div>
-
-          <div className="arrival-list">
-            {arrivals.length === 0 ? (
-              <div className="empty-state">
-                <h3>No arrivals</h3>
-                <p>
-                  {activeLine === 'all'
-                    ? 'This stop has no mock arrivals yet.'
-                    : `There are no visible arrivals for line ${activeLine} at this stop.`}
-                </p>
-              </div>
-            ) : (
-              arrivals.map(renderArrivalCard)
-            )}
-          </div>
-        </section>
-
-        <aside className="panel route-panel">
-          {selectedArrival && selectedRoute ? (
-            <>
-              <div className="panel-header">
-                <h2>Route {selectedRoute.line}</h2>
-                <p>{selectedRoute.destination}</p>
-              </div>
-
-              <div className="route-highlight">
-                <div className="line-badge large" style={{ backgroundColor: selectedRoute.color }}>
-                  {selectedRoute.line}
-                </div>
-                <div>
-                  <span className="detail-label">Selected arrival</span>
-                  <strong>{formatTime(selectedArrival.expectedAt)} · {statusLabels[selectedArrival.status]}</strong>
-                </div>
-              </div>
-
-              <div className="route-summary-grid">
-                <div>
-                  <span className="detail-label">Destination</span>
-                  <strong>{selectedArrival.destination}</strong>
-                </div>
-                <div>
-                  <span className="detail-label">Platform</span>
-                  <strong>{selectedArrival.platform ?? 'TBD'}</strong>
-                </div>
-                <div>
-                  <span className="detail-label">Scheduled</span>
-                  <strong>{formatTime(selectedArrival.scheduledAt)}</strong>
-                </div>
-                <div>
-                  <span className="detail-label">Expected</span>
-                  <strong>{formatTime(selectedArrival.expectedAt)}</strong>
-                </div>
-              </div>
-
-              {selectedArrival.disruptionNote ? (
-                <div className="alert-card">
-                  <span className="detail-label">Service note</span>
-                  <strong>{selectedArrival.disruptionNote}</strong>
-                </div>
-              ) : null}
-
-              <div className="route-stops">
-                <h3>Ordered stops</h3>
-                <div className="route-stop-list">
-                  {selectedRoute.stops.map((stop) => (
-                    <article key={stop.stopId} className={`route-stop ${stop.stopId === selectedStop.id ? 'current' : ''}`}>
-                      <span className="route-stop-order">{stop.order}</span>
-                      <div>
-                        <strong>{stop.stopName}</strong>
-                        <p>{stop.stopId === selectedStop.id ? 'Current board selection' : 'Served by this route'}</p>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="empty-state">
-              <h2>No route selected</h2>
-              <p>Select an arrival from the board to inspect the route details.</p>
-            </div>
-          )}
-        </aside>
+        <RoutePanel
+          selectedArrival={selectedArrival}
+          selectedRoute={selectedRoute}
+          selectedStop={selectedStop}
+        />
       </main>
     </div>
   );
