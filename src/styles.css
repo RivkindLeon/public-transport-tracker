@@ -153,6 +153,17 @@ p {
   color: #e0f2fe;
 }
 
+.filter-chip-alert {
+  border-color: rgba(239, 68, 68, 0.28);
+  color: #fecaca;
+}
+
+.filter-chip-alert.selected {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.16);
+  color: #fee2e2;
+}
+
 .board-summary {
   display: flex;
   justify-content: space-between;

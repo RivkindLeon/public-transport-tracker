@@ -5,8 +5,12 @@ type ArrivalsPanelProps = {
   selectedStop: Stop;
   activeLine: 'all' | string;
   availableLines: string[];
+  boardView: 'all' | 'disrupted' | 'smooth';
   arrivals: Arrival[];
+  totalArrivals: number;
+  disruptedCount: number;
   onActiveLineChange: (line: 'all' | string) => void;
+  onBoardViewChange: (view: 'all' | 'disrupted' | 'smooth') => void;
   onFavoriteToggle: (stopId: string) => void;
   onArrivalSelect: (arrivalId: string) => void;
   selectedArrivalId: string;
@@ -16,12 +20,18 @@ export function ArrivalsPanel({
   selectedStop,
   activeLine,
   availableLines,
+  boardView,
   arrivals,
+  totalArrivals,
+  disruptedCount,
   onActiveLineChange,
+  onBoardViewChange,
   onFavoriteToggle,
   onArrivalSelect,
   selectedArrivalId,
 }: ArrivalsPanelProps) {
+  const calmCount = totalArrivals - disruptedCount;
+
   return (
     <section className="panel arrivals-panel">
       <div className="panel-header panel-header-row">
@@ -61,12 +71,40 @@ export function ArrivalsPanel({
         ))}
       </div>
 
+      <div className="filter-toolbar" aria-label="Arrival board views">
+        <button
+          type="button"
+          className={`filter-chip ${boardView === 'all' ? 'selected' : ''}`}
+          onClick={() => onBoardViewChange('all')}
+        >
+          Full board
+        </button>
+        <button
+          type="button"
+          className={`filter-chip filter-chip-alert ${boardView === 'disrupted' ? 'selected' : ''}`}
+          onClick={() => onBoardViewChange('disrupted')}
+        >
+          Disruptions only · {disruptedCount}
+        </button>
+        <button
+          type="button"
+          className={`filter-chip ${boardView === 'smooth' ? 'selected' : ''}`}
+          onClick={() => onBoardViewChange('smooth')}
+        >
+          Smooth trips · {calmCount}
+        </button>
+      </div>
+
       <div className="board-summary">
         <span>{arrivals.length} visible arrivals</span>
         <span>
-          {activeLine === 'all'
-            ? 'Showing every line'
-            : `Filtered to line ${activeLine}`}
+          {boardView === 'disrupted'
+            ? 'Focusing on delayed and cancelled service'
+            : boardView === 'smooth'
+              ? 'Showing on-time and boarding trips only'
+              : activeLine === 'all'
+                ? 'Showing every line'
+                : `Filtered to line ${activeLine}`}
         </span>
       </div>
 
@@ -75,9 +113,13 @@ export function ArrivalsPanel({
           <div className="empty-state">
             <h3>No arrivals</h3>
             <p>
-              {activeLine === 'all'
-                ? 'This stop has no mock arrivals yet.'
-                : `There are no visible arrivals for line ${activeLine} at this stop.`}
+              {boardView === 'disrupted'
+                ? 'There are no delayed or cancelled arrivals in this board view right now.'
+                : boardView === 'smooth'
+                  ? 'There are no on-time or boarding arrivals in this board view right now.'
+                  : activeLine === 'all'
+                    ? 'This stop has no mock arrivals yet.'
+                    : `There are no visible arrivals for line ${activeLine} at this stop.`}
             </p>
           </div>
         ) : (

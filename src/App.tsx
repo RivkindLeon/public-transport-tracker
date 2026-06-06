@@ -15,11 +15,14 @@ export default function App() {
     nearbyStops,
     activeLine,
     availableLines,
+    boardView,
     arrivals,
+    lineFilteredArrivals,
     selectedArrival,
     selectedArrivalId,
     selectedRoute,
     setActiveLine,
+    setBoardView,
     setSelectedArrivalId,
     handleStopSelect,
     handleFavoriteToggle,
@@ -64,8 +67,15 @@ export default function App() {
           selectedStop={selectedStop}
           activeLine={activeLine}
           availableLines={availableLines}
+          boardView={boardView}
           arrivals={arrivals}
+          totalArrivals={lineFilteredArrivals.length}
+          disruptedCount={lineFilteredArrivals.filter(
+            (arrival) =>
+              arrival.status === 'delayed' || arrival.status === 'cancelled',
+          ).length}
           onActiveLineChange={setActiveLine}
+          onBoardViewChange={setBoardView}
           onFavoriteToggle={handleFavoriteToggle}
           onArrivalSelect={setSelectedArrivalId}
           selectedArrivalId={selectedArrivalId}
