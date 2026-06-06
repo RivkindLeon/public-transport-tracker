@@ -23,6 +23,9 @@ export function useTransportTrackerState() {
   const [activeLine, setActiveLine] = useState<'all' | string>(() =>
     getInitialActiveLine(getInitialSelectedStopId()),
   );
+  const [boardView, setBoardView] = useState<'all' | 'disrupted' | 'smooth'>(
+    'all',
+  );
   const stopArrivals = useMemo(
     () => getStopArrivals(selectedStopId),
     [selectedStopId],
@@ -37,13 +40,30 @@ export function useTransportTrackerState() {
   const selectedStop =
     stops.find((stop) => stop.id === selectedStopId) ?? stops[0];
   const availableLines = selectedStop?.lines ?? [];
-  const arrivals = useMemo(
+  const lineFilteredArrivals = useMemo(
     () =>
       activeLine === 'all'
         ? stopArrivals
         : stopArrivals.filter((arrival) => arrival.line === activeLine),
     [activeLine, stopArrivals],
   );
+  const arrivals = useMemo(() => {
+    if (boardView === 'disrupted') {
+      return lineFilteredArrivals.filter(
+        (arrival) =>
+          arrival.status === 'delayed' || arrival.status === 'cancelled',
+      );
+    }
+
+    if (boardView === 'smooth') {
+      return lineFilteredArrivals.filter(
+        (arrival) =>
+          arrival.status === 'on-time' || arrival.status === 'boarding',
+      );
+    }
+
+    return lineFilteredArrivals;
+  }, [boardView, lineFilteredArrivals]);
   const selectedArrival =
     arrivals.find((arrival) => arrival.id === selectedArrivalId) ?? arrivals[0];
   const selectedRoute = selectedArrival
@@ -148,6 +168,7 @@ export function useTransportTrackerState() {
       ].slice(0, maxRecentStops),
     );
     setActiveLine('all');
+    setBoardView('all');
     setSelectedArrivalId(getInitialSelectedArrivalId(stopId, 'all'));
   };
 
@@ -171,11 +192,14 @@ export function useTransportTrackerState() {
     nearbyStops,
     activeLine,
     availableLines,
+    boardView,
     arrivals,
+    lineFilteredArrivals,
     selectedArrival,
     selectedArrivalId,
     selectedRoute,
     setActiveLine,
+    setBoardView,
     setSelectedArrivalId,
     handleStopSelect,
     handleFavoriteToggle,
