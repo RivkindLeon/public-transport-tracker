@@ -7,6 +7,8 @@ type StopCardProps = {
   onFavoriteToggle: (stopId: string) => void;
   metaLabel?: string;
   detailLabel?: string;
+  insightLabel?: string;
+  insightTone?: 'calm' | 'warning';
   onDismiss?: () => void;
 };
 
@@ -17,6 +19,8 @@ export function StopCard({
   onFavoriteToggle,
   metaLabel,
   detailLabel,
+  insightLabel,
+  insightTone = 'calm',
   onDismiss,
 }: StopCardProps) {
   return (
@@ -55,6 +59,11 @@ export function StopCard({
       {metaLabel ? <span className="recent-stop-meta">{metaLabel}</span> : null}
       {detailLabel ? (
         <span className="recent-stop-detail">{detailLabel}</span>
+      ) : null}
+      {insightLabel ? (
+        <span className={`recent-stop-insight ${insightTone}`}>
+          {insightLabel}
+        </span>
       ) : null}
       <button
         type="button"

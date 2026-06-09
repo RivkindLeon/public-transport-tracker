@@ -225,8 +225,7 @@ export const getRecentStopDisruptionSummary = (
 ): RecentStopDisruptionSummary => {
   const stopArrivals = getStopArrivals(stopId);
   const disruptedArrivals = stopArrivals.filter(
-    (arrival) =>
-      arrival.status === 'delayed' || arrival.status === 'cancelled',
+    (arrival) => arrival.status === 'delayed' || arrival.status === 'cancelled',
   );
 
   if (disruptedArrivals.length === 0) {

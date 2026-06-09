@@ -70,10 +70,12 @@ export default function App() {
           boardView={boardView}
           arrivals={arrivals}
           totalArrivals={lineFilteredArrivals.length}
-          disruptedCount={lineFilteredArrivals.filter(
-            (arrival) =>
-              arrival.status === 'delayed' || arrival.status === 'cancelled',
-          ).length}
+          disruptedCount={
+            lineFilteredArrivals.filter(
+              (arrival) =>
+                arrival.status === 'delayed' || arrival.status === 'cancelled',
+            ).length
+          }
           onActiveLineChange={setActiveLine}
           onBoardViewChange={setBoardView}
           onFavoriteToggle={handleFavoriteToggle}
