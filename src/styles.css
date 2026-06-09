@@ -81,6 +81,24 @@ p {
   color: #94a3b8;
 }
 
+.recent-stop-insight {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.recent-stop-insight.calm {
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.recent-stop-insight.warning {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+}
+
 .summary-card,
 .panel,
 .stop-card,

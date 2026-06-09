@@ -2,6 +2,7 @@ import { maxRecentStops } from '../constants';
 import type { Stop } from '../types';
 import {
   formatRecentView,
+  getRecentStopDisruptionSummary,
   getRecentStopRouteSummary,
   type RecentStopView,
 } from '../utils';
@@ -35,6 +36,8 @@ export function StopPanel({
     options?: {
       metaLabel?: string;
       detailLabel?: string;
+      insightLabel?: string;
+      insightTone?: 'calm' | 'warning';
       onDismiss?: () => void;
     },
   ) => (
@@ -46,6 +49,8 @@ export function StopPanel({
       onFavoriteToggle={onFavoriteToggle}
       metaLabel={options?.metaLabel}
       detailLabel={options?.detailLabel}
+      insightLabel={options?.insightLabel}
+      insightTone={options?.insightTone}
       onDismiss={options?.onDismiss}
     />
   );
@@ -106,13 +111,17 @@ export function StopPanel({
               <p>Your recently viewed stops will appear here.</p>
             </div>
           ) : (
-            recentStops.map(({ stop, viewedAt }) =>
-              renderStopCard(stop, {
+            recentStops.map(({ stop, viewedAt }) => {
+              const disruptionSummary = getRecentStopDisruptionSummary(stop.id);
+
+              return renderStopCard(stop, {
                 metaLabel: formatRecentView(viewedAt),
                 detailLabel: getRecentStopRouteSummary(stop.id),
                 onDismiss: () => onRecentStopDismiss(stop.id),
-              }),
-            )
+                insightLabel: disruptionSummary.label,
+                insightTone: disruptionSummary.tone,
+              });
+            })
           )}
         </div>
       </section>

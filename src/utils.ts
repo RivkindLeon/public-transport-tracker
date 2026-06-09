@@ -7,6 +7,11 @@ export type RecentStopView = {
   viewedAt: string;
 };
 
+export type RecentStopDisruptionSummary = {
+  label: string;
+  tone: 'calm' | 'warning';
+};
+
 export const sortStops = (stops: Stop[]) =>
   [...stops].sort((left, right) => {
     if (left.isFavorite === right.isFavorite) {
@@ -213,4 +218,36 @@ export const getRecentStopRouteSummary = (stopId: string) => {
   }
 
   return `Line ${highlightedArrival.line} to ${highlightedArrival.destination} · ${getMinutesUntil(highlightedArrival.expectedAt)}`;
+};
+
+export const getRecentStopDisruptionSummary = (
+  stopId: string,
+): RecentStopDisruptionSummary => {
+  const stopArrivals = getStopArrivals(stopId);
+  const disruptedArrivals = stopArrivals.filter(
+    (arrival) => arrival.status === 'delayed' || arrival.status === 'cancelled',
+  );
+
+  if (disruptedArrivals.length === 0) {
+    return {
+      label: `${stopArrivals.length} smooth arrivals right now`,
+      tone: 'calm',
+    };
+  }
+
+  const cancelledCount = disruptedArrivals.filter(
+    (arrival) => arrival.status === 'cancelled',
+  ).length;
+  const delayedCount = disruptedArrivals.length - cancelledCount;
+  const disruptionBreakdown = [
+    delayedCount > 0 ? `${delayedCount} delayed` : null,
+    cancelledCount > 0 ? `${cancelledCount} cancelled` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  return {
+    label: `${disruptedArrivals.length} disrupted arrivals · ${disruptionBreakdown}`,
+    tone: 'warning',
+  };
 };
