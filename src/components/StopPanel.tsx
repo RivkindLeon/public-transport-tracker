@@ -2,6 +2,7 @@ import { maxRecentStops } from '../constants';
 import type { Stop } from '../types';
 import {
   formatRecentView,
+  getRecentStopDisruptionSummary,
   getRecentStopRouteSummary,
   type RecentStopView,
 } from '../utils';
@@ -109,7 +110,7 @@ export function StopPanel({
             recentStops.map(({ stop, viewedAt }) =>
               renderStopCard(stop, {
                 metaLabel: formatRecentView(viewedAt),
-                detailLabel: getRecentStopRouteSummary(stop.id),
+                detailLabel: `${getRecentStopRouteSummary(stop.id)} · ${getRecentStopDisruptionSummary(stop.id).label}`,
                 onDismiss: () => onRecentStopDismiss(stop.id),
               }),
             )
