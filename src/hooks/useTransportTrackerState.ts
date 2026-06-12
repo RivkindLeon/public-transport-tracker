@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getRoute, getStopArrivals } from '../data/mockData';
 import { maxRecentStops, snapshot, storageKeys } from '../constants';
-import type { Stop } from '../types';
+import type { RecentStopFilter, RecentStopSort, Stop } from '../types';
 import {
+  filterRecentStopViews,
   getInitialActiveLine,
+  getInitialRecentStopFilter,
+  getInitialRecentStopSort,
   getInitialRecentStopViews,
   getInitialSelectedArrivalId,
   getInitialSelectedStopId,
   getInitialStops,
   getSavedSelectedArrivals,
+  sortRecentStopViews,
   sortStops,
 } from '../utils';
 
@@ -22,6 +26,12 @@ export function useTransportTrackerState() {
   );
   const [activeLine, setActiveLine] = useState<'all' | string>(() =>
     getInitialActiveLine(getInitialSelectedStopId()),
+  );
+  const [recentStopFilter, setRecentStopFilter] = useState<RecentStopFilter>(
+    () => getInitialRecentStopFilter(),
+  );
+  const [recentStopSort, setRecentStopSort] = useState<RecentStopSort>(() =>
+    getInitialRecentStopSort(),
   );
   const [boardView, setBoardView] = useState<'all' | 'disrupted' | 'smooth'>(
     'all',
@@ -71,7 +81,10 @@ export function useTransportTrackerState() {
     : undefined;
 
   const favoriteStops = stops.filter((stop) => stop.isFavorite);
-  const recentStops = recentStopViews
+  const recentStops = sortRecentStopViews(
+    filterRecentStopViews(recentStopViews, recentStopFilter),
+    recentStopSort,
+  )
     .map((recentStopView) => {
       const stop = stops.find(
         (candidateStop) => candidateStop.id === recentStopView.stopId,
@@ -83,7 +96,7 @@ export function useTransportTrackerState() {
       (entry): entry is (typeof recentStopViews)[number] & { stop: Stop } =>
         Boolean(entry),
     );
-  const recentStopIds = new Set(recentStops.map((entry) => entry.stop.id));
+  const recentStopIds = new Set(recentStopViews.map((entry) => entry.stopId));
   const nearbyStops = stops.filter(
     (stop) => !stop.isFavorite && !recentStopIds.has(stop.id),
   );
@@ -107,6 +120,14 @@ export function useTransportTrackerState() {
       JSON.stringify(recentStopViews),
     );
   }, [recentStopViews]);
+
+  useEffect(() => {
+    window.localStorage.setItem(storageKeys.recentStopFilter, recentStopFilter);
+  }, [recentStopFilter]);
+
+  useEffect(() => {
+    window.localStorage.setItem(storageKeys.recentStopSort, recentStopSort);
+  }, [recentStopSort]);
 
   useEffect(() => {
     window.localStorage.setItem(storageKeys.activeLine, activeLine);
@@ -192,6 +213,8 @@ export function useTransportTrackerState() {
     nearbyStops,
     activeLine,
     availableLines,
+    recentStopFilter,
+    recentStopSort,
     boardView,
     arrivals,
     lineFilteredArrivals,
@@ -199,6 +222,8 @@ export function useTransportTrackerState() {
     selectedArrivalId,
     selectedRoute,
     setActiveLine,
+    setRecentStopFilter,
+    setRecentStopSort,
     setBoardView,
     setSelectedArrivalId,
     handleStopSelect,
