@@ -42,3 +42,6 @@ export type TransportSnapshot = {
   routes: Route[];
   arrivals: Arrival[];
 };
+
+export type RecentStopFilter = 'all' | 'disrupted';
+export type RecentStopSort = 'recent' | 'urgent';

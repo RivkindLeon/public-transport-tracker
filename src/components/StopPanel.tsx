@@ -1,5 +1,5 @@
 import { maxRecentStops } from '../constants';
-import type { Stop } from '../types';
+import type { RecentStopFilter, RecentStopSort, Stop } from '../types';
 import {
   formatRecentView,
   getRecentStopDisruptionSummary,
@@ -15,10 +15,14 @@ type StopPanelProps = {
   nearbyStops: Stop[];
   recentStops: RecentStopEntry[];
   selectedStopId: string;
+  recentStopFilter: RecentStopFilter;
+  recentStopSort: RecentStopSort;
   onStopSelect: (stopId: string) => void;
   onFavoriteToggle: (stopId: string) => void;
   onRecentHistoryClear: () => void;
   onRecentStopDismiss: (stopId: string) => void;
+  onRecentStopFilterChange: (filter: RecentStopFilter) => void;
+  onRecentStopSortChange: (sort: RecentStopSort) => void;
 };
 
 export function StopPanel({
@@ -26,10 +30,14 @@ export function StopPanel({
   nearbyStops,
   recentStops,
   selectedStopId,
+  recentStopFilter,
+  recentStopSort,
   onStopSelect,
   onFavoriteToggle,
   onRecentHistoryClear,
   onRecentStopDismiss,
+  onRecentStopFilterChange,
+  onRecentStopSortChange,
 }: StopPanelProps) {
   const renderStopCard = (
     stop: Stop,
@@ -97,18 +105,54 @@ export function StopPanel({
             </button>
           ) : null}
         </div>
+        <div className="filter-toolbar compact-filter-toolbar">
+          <button
+            type="button"
+            className={`filter-chip ${recentStopFilter === 'all' ? 'selected' : ''}`}
+            onClick={() => onRecentStopFilterChange('all')}
+          >
+            All recent stops
+          </button>
+          <button
+            type="button"
+            className={`filter-chip filter-chip-alert ${recentStopFilter === 'disrupted' ? 'selected' : ''}`}
+            onClick={() => onRecentStopFilterChange('disrupted')}
+          >
+            Disruptions only
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${recentStopSort === 'recent' ? 'selected' : ''}`}
+            onClick={() => onRecentStopSortChange('recent')}
+          >
+            Latest viewed
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${recentStopSort === 'urgent' ? 'selected' : ''}`}
+            onClick={() => onRecentStopSortChange('urgent')}
+          >
+            Urgent first
+          </button>
+        </div>
         <div className="board-summary recent-history-summary">
-          <span>{recentStops.length} saved recent stops</span>
+          <span>{recentStops.length} visible recent stops</span>
           <span>
-            {recentStops.length === maxRecentStops
-              ? 'History is full'
-              : `${maxRecentStops - recentStops.length} open slots left`}
+            {recentStopFilter === 'disrupted'
+              ? 'Showing only saved boards with delays or cancellations'
+              : recentStops.length === maxRecentStops
+                ? 'History is full'
+                : `${maxRecentStops - recentStops.length} open slots left`}
           </span>
         </div>
         <div className="stop-list">
           {recentStops.length === 0 ? (
             <div className="empty-state compact-empty-state">
-              <p>Your recently viewed stops will appear here.</p>
+              <p>
+                {recentStopFilter === 'disrupted'
+                  ? 'No saved recent stops currently have delays or cancellations.'
+                  : 'Your recently viewed stops will appear here.'}
+              </p>
             </div>
           ) : (
             recentStops.map(({ stop, viewedAt }) => {

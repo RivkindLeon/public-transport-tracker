@@ -142,6 +142,10 @@ p {
   margin-top: 16px;
 }
 
+.compact-filter-toolbar {
+  margin-top: 10px;
+}
+
 .stop-list,
 .arrival-list,
 .route-stop-list {

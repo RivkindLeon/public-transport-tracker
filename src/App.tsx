@@ -15,6 +15,8 @@ export default function App() {
     nearbyStops,
     activeLine,
     availableLines,
+    recentStopFilter,
+    recentStopSort,
     boardView,
     arrivals,
     lineFilteredArrivals,
@@ -22,6 +24,8 @@ export default function App() {
     selectedArrivalId,
     selectedRoute,
     setActiveLine,
+    setRecentStopFilter,
+    setRecentStopSort,
     setBoardView,
     setSelectedArrivalId,
     handleStopSelect,
@@ -57,10 +61,14 @@ export default function App() {
           nearbyStops={nearbyStops}
           recentStops={recentStops}
           selectedStopId={selectedStopId}
+          recentStopFilter={recentStopFilter}
+          recentStopSort={recentStopSort}
           onStopSelect={handleStopSelect}
           onFavoriteToggle={handleFavoriteToggle}
           onRecentHistoryClear={handleRecentHistoryClear}
           onRecentStopDismiss={handleRecentStopDismiss}
+          onRecentStopFilterChange={setRecentStopFilter}
+          onRecentStopSortChange={setRecentStopSort}
         />
 
         <ArrivalsPanel
