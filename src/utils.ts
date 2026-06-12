@@ -1,6 +1,6 @@
 import { getStopArrivals } from './data/mockData';
 import { maxRecentStops, snapshot, storageKeys } from './constants';
-import type { Stop } from './types';
+import type { RecentStopFilter, RecentStopSort, Stop } from './types';
 
 export type RecentStopView = {
   stopId: string;
@@ -10,6 +10,7 @@ export type RecentStopView = {
 export type RecentStopDisruptionSummary = {
   label: string;
   tone: 'calm' | 'warning';
+  disruptedCount: number;
 };
 
 export const sortStops = (stops: Stop[]) =>
@@ -108,6 +109,27 @@ export const getInitialActiveLine = (selectedStopId: string) => {
   }
 
   return 'all';
+};
+
+export const getInitialRecentStopFilter = (): RecentStopFilter => {
+  if (typeof window === 'undefined') {
+    return 'all';
+  }
+
+  return window.localStorage.getItem(storageKeys.recentStopFilter) ===
+    'disrupted'
+    ? 'disrupted'
+    : 'all';
+};
+
+export const getInitialRecentStopSort = (): RecentStopSort => {
+  if (typeof window === 'undefined') {
+    return 'recent';
+  }
+
+  return window.localStorage.getItem(storageKeys.recentStopSort) === 'urgent'
+    ? 'urgent'
+    : 'recent';
 };
 
 export const getInitialSelectedArrivalId = (
@@ -232,6 +254,7 @@ export const getRecentStopDisruptionSummary = (
     return {
       label: `${stopArrivals.length} smooth arrivals right now`,
       tone: 'calm',
+      disruptedCount: 0,
     };
   }
 
@@ -249,5 +272,58 @@ export const getRecentStopDisruptionSummary = (
   return {
     label: `${disruptedArrivals.length} disrupted arrivals · ${disruptionBreakdown}`,
     tone: 'warning',
+    disruptedCount: disruptedArrivals.length,
   };
+};
+
+export const getRecentStopUrgencyMinutes = (stopId: string) => {
+  const nextArrival = getStopArrivals(stopId)[0];
+
+  if (!nextArrival) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return new Date(nextArrival.expectedAt).getTime() - Date.now();
+};
+
+export const filterRecentStopViews = (
+  recentStopViews: RecentStopView[],
+  filter: RecentStopFilter,
+) => {
+  if (filter === 'all') {
+    return recentStopViews;
+  }
+
+  return recentStopViews.filter(
+    (entry) => getRecentStopDisruptionSummary(entry.stopId).disruptedCount > 0,
+  );
+};
+
+export const sortRecentStopViews = (
+  recentStopViews: RecentStopView[],
+  sort: RecentStopSort,
+) => {
+  return [...recentStopViews].sort((left, right) => {
+    if (sort === 'urgent') {
+      const disruptionDelta =
+        getRecentStopDisruptionSummary(right.stopId).disruptedCount -
+        getRecentStopDisruptionSummary(left.stopId).disruptedCount;
+
+      if (disruptionDelta !== 0) {
+        return disruptionDelta;
+      }
+
+      const urgencyDelta =
+        getRecentStopUrgencyMinutes(left.stopId) -
+        getRecentStopUrgencyMinutes(right.stopId);
+
+      if (urgencyDelta !== 0) {
+        return urgencyDelta;
+      }
+    }
+
+    return (
+      new Date(right.viewedAt).getTime() - new Date(left.viewedAt).getTime()
+    );
+  });
 };

@@ -9,6 +9,8 @@ export const storageKeys = {
   activeLine: 'public-transport-tracker.active-line',
   selectedArrivals: 'public-transport-tracker.selected-arrivals',
   recentStops: 'public-transport-tracker.recent-stop-views',
+  recentStopFilter: 'public-transport-tracker.recent-stop-filter',
+  recentStopSort: 'public-transport-tracker.recent-stop-sort',
 } as const;
 
 export const maxRecentStops = 5;
