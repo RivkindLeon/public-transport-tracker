@@ -1,6 +1,6 @@
 import { statusLabels } from '../constants';
 import type { Arrival, Route, Stop } from '../types';
-import { formatTime } from '../utils';
+import { formatTime } from '../utils/time';
 
 type RoutePanelProps = {
   selectedArrival?: Arrival;

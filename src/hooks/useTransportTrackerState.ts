@@ -3,7 +3,6 @@ import { getRoute, getStopArrivals } from '../data/mockData';
 import { maxRecentStops, snapshot, storageKeys } from '../constants';
 import type { RecentStopFilter, RecentStopSort, Stop } from '../types';
 import {
-  filterRecentStopViews,
   getInitialActiveLine,
   getInitialRecentStopFilter,
   getInitialRecentStopSort,
@@ -12,9 +11,12 @@ import {
   getInitialSelectedStopId,
   getInitialStops,
   getSavedSelectedArrivals,
-  sortRecentStopViews,
   sortStops,
-} from '../utils';
+} from '../utils/storage';
+import {
+  filterRecentStopViews,
+  sortRecentStopViews,
+} from '../utils/recentStops';
 
 export function useTransportTrackerState() {
   const [stops, setStops] = useState<Stop[]>(() => getInitialStops());
@@ -49,7 +51,10 @@ export function useTransportTrackerState() {
 
   const selectedStop =
     stops.find((stop) => stop.id === selectedStopId) ?? stops[0];
-  const availableLines = selectedStop?.lines ?? [];
+  const availableLines = useMemo(
+    () => selectedStop?.lines ?? [],
+    [selectedStop],
+  );
   const lineFilteredArrivals = useMemo(
     () =>
       activeLine === 'all'
@@ -75,7 +80,8 @@ export function useTransportTrackerState() {
     return lineFilteredArrivals;
   }, [boardView, lineFilteredArrivals]);
   const selectedArrival =
-    arrivals.find((arrival) => arrival.id === selectedArrivalId) ?? arrivals[0];
+    arrivals.find((arrival) => arrival.id === effectiveSelectedArrivalId) ??
+    arrivals[0];
   const selectedRoute = selectedArrival
     ? getRoute(selectedArrival.routeId)
     : undefined;
@@ -161,24 +167,11 @@ export function useTransportTrackerState() {
     );
   }, [selectedArrivalId, selectedStopId]);
 
-  useEffect(() => {
-    if (!availableLines.includes(activeLine)) {
-      setActiveLine('all');
-    }
-  }, [activeLine, availableLines]);
-
-  useEffect(() => {
-    if (!arrivals.some((arrival) => arrival.id === selectedArrivalId)) {
-      const savedSelectedArrivalId = getSavedSelectedArrivals()[selectedStopId];
-      const nextSelectedArrivalId = arrivals.some(
-        (arrival) => arrival.id === savedSelectedArrivalId,
-      )
-        ? savedSelectedArrivalId
-        : (arrivals[0]?.id ?? '');
-
-      setSelectedArrivalId(nextSelectedArrivalId);
-    }
-  }, [arrivals, selectedArrivalId, selectedStopId]);
+  const effectiveSelectedArrivalId = arrivals.some(
+    (arrival) => arrival.id === selectedArrivalId,
+  )
+    ? selectedArrivalId
+    : (arrivals[0]?.id ?? '');
 
   const handleStopSelect = (stopId: string) => {
     setSelectedStopId(stopId);
@@ -219,7 +212,7 @@ export function useTransportTrackerState() {
     arrivals,
     lineFilteredArrivals,
     selectedArrival,
-    selectedArrivalId,
+    selectedArrivalId: effectiveSelectedArrivalId,
     selectedRoute,
     setActiveLine,
     setRecentStopFilter,

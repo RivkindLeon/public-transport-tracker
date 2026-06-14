@@ -1,11 +1,15 @@
 import { maxRecentStops } from '../constants';
-import type { RecentStopFilter, RecentStopSort, Stop } from '../types';
+import type {
+  RecentStopFilter,
+  RecentStopSort,
+  RecentStopView,
+  Stop,
+} from '../types';
+import { formatRecentView } from '../utils/time';
 import {
-  formatRecentView,
   getRecentStopDisruptionSummary,
   getRecentStopRouteSummary,
-  type RecentStopView,
-} from '../utils';
+} from '../utils/recentStops';
 import { StopCard } from './StopCard';
 
 type RecentStopEntry = RecentStopView & { stop: Stop };

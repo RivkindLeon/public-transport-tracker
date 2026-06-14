@@ -1,7 +1,7 @@
 import { getRoute } from '../data/mockData';
 import { statusLabels } from '../constants';
 import type { Arrival } from '../types';
-import { formatTime, getMinutesUntil } from '../utils';
+import { formatTime, getMinutesUntil } from '../utils/time';
 
 type ArrivalCardProps = {
   arrival: Arrival;
