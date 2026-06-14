@@ -45,3 +45,14 @@ export type TransportSnapshot = {
 
 export type RecentStopFilter = 'all' | 'disrupted';
 export type RecentStopSort = 'recent' | 'urgent';
+
+export type RecentStopView = {
+  stopId: string;
+  viewedAt: string;
+};
+
+export type RecentStopDisruptionSummary = {
+  label: string;
+  tone: 'calm' | 'warning';
+  disruptedCount: number;
+};

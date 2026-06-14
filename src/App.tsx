@@ -2,7 +2,7 @@ import { ArrivalsPanel } from './components/ArrivalsPanel';
 import { RoutePanel } from './components/RoutePanel';
 import { StopPanel } from './components/StopPanel';
 import { useTransportTrackerState } from './hooks/useTransportTrackerState';
-import { formatTime } from './utils';
+import { formatTime } from './utils/time';
 
 export default function App() {
   const {

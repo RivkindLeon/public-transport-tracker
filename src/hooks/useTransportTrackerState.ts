@@ -3,7 +3,6 @@ import { getRoute, getStopArrivals } from '../data/mockData';
 import { maxRecentStops, snapshot, storageKeys } from '../constants';
 import type { RecentStopFilter, RecentStopSort, Stop } from '../types';
 import {
-  filterRecentStopViews,
   getInitialActiveLine,
   getInitialRecentStopFilter,
   getInitialRecentStopSort,
@@ -12,9 +11,12 @@ import {
   getInitialSelectedStopId,
   getInitialStops,
   getSavedSelectedArrivals,
-  sortRecentStopViews,
   sortStops,
-} from '../utils';
+} from '../utils/storage';
+import {
+  filterRecentStopViews,
+  sortRecentStopViews,
+} from '../utils/recentStops';
 
 export function useTransportTrackerState() {
   const [stops, setStops] = useState<Stop[]>(() => getInitialStops());
