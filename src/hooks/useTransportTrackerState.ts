@@ -79,6 +79,11 @@ export function useTransportTrackerState() {
 
     return lineFilteredArrivals;
   }, [boardView, lineFilteredArrivals]);
+  const effectiveSelectedArrivalId = arrivals.some(
+    (arrival) => arrival.id === selectedArrivalId,
+  )
+    ? selectedArrivalId
+    : (arrivals[0]?.id ?? '');
   const selectedArrival =
     arrivals.find((arrival) => arrival.id === effectiveSelectedArrivalId) ??
     arrivals[0];
@@ -166,12 +171,6 @@ export function useTransportTrackerState() {
       JSON.stringify(remainingSelectedArrivals),
     );
   }, [selectedArrivalId, selectedStopId]);
-
-  const effectiveSelectedArrivalId = arrivals.some(
-    (arrival) => arrival.id === selectedArrivalId,
-  )
-    ? selectedArrivalId
-    : (arrivals[0]?.id ?? '');
 
   const handleStopSelect = (stopId: string) => {
     setSelectedStopId(stopId);
