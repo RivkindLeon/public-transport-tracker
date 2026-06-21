@@ -2,6 +2,7 @@ import { ArrivalsPanel } from './components/ArrivalsPanel';
 import { RoutePanel } from './components/RoutePanel';
 import { StopPanel } from './components/StopPanel';
 import { useTransportTrackerState } from './hooks/useTransportTrackerState';
+import { isDisruptedArrival } from './utils/arrival';
 import { formatTime } from './utils/time';
 
 export default function App() {
@@ -78,12 +79,7 @@ export default function App() {
           boardView={boardView}
           arrivals={arrivals}
           totalArrivals={lineFilteredArrivals.length}
-          disruptedCount={
-            lineFilteredArrivals.filter(
-              (arrival) =>
-                arrival.status === 'delayed' || arrival.status === 'cancelled',
-            ).length
-          }
+          disruptedCount={lineFilteredArrivals.filter(isDisruptedArrival).length}
           onActiveLineChange={setActiveLine}
           onBoardViewChange={setBoardView}
           onFavoriteToggle={handleFavoriteToggle}
