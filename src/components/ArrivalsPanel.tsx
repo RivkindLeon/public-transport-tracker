@@ -1,16 +1,16 @@
-import type { Arrival, Stop } from '../types';
+import type { Arrival, BoardView, LineFilter, Stop } from '../types';
 import { ArrivalCard } from './ArrivalCard';
 
 type ArrivalsPanelProps = {
   selectedStop: Stop;
-  activeLine: 'all' | string;
+  activeLine: LineFilter;
   availableLines: string[];
-  boardView: 'all' | 'disrupted' | 'smooth';
+  boardView: BoardView;
   arrivals: Arrival[];
   totalArrivals: number;
   disruptedCount: number;
-  onActiveLineChange: (line: 'all' | string) => void;
-  onBoardViewChange: (view: 'all' | 'disrupted' | 'smooth') => void;
+  onActiveLineChange: (line: LineFilter) => void;
+  onBoardViewChange: (view: BoardView) => void;
   onFavoriteToggle: (stopId: string) => void;
   onArrivalSelect: (arrivalId: string) => void;
   selectedArrivalId: string;

@@ -1,8 +1,8 @@
 import { maxRecentStops } from '../constants';
 import type {
+  RecentStopEntry,
   RecentStopFilter,
   RecentStopSort,
-  RecentStopView,
   Stop,
 } from '../types';
 import { formatRecentView } from '../utils/time';
@@ -11,8 +11,6 @@ import {
   getRecentStopRouteSummary,
 } from '../utils/recentStops';
 import { StopCard } from './StopCard';
-
-type RecentStopEntry = RecentStopView & { stop: Stop };
 
 type StopPanelProps = {
   favoriteStops: Stop[];

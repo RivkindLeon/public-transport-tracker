@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getRoute, getStopArrivals } from '../data/mockData';
 import { maxRecentStops, snapshot, storageKeys } from '../constants';
-import type { RecentStopFilter, RecentStopSort, Stop } from '../types';
+import { isDisruptedArrival, isSmoothArrival } from '../utils/arrival';
+import type { BoardView, LineFilter, RecentStopEntry, RecentStopFilter, RecentStopSort } from '../types';
 import {
   getInitialActiveLine,
   getInitialRecentStopFilter,
@@ -26,7 +27,7 @@ export function useTransportTrackerState() {
   const [recentStopViews, setRecentStopViews] = useState(() =>
     getInitialRecentStopViews(),
   );
-  const [activeLine, setActiveLine] = useState<'all' | string>(() =>
+  const [activeLine, setActiveLine] = useState<LineFilter>(() =>
     getInitialActiveLine(getInitialSelectedStopId()),
   );
   const [recentStopFilter, setRecentStopFilter] = useState<RecentStopFilter>(
@@ -35,9 +36,7 @@ export function useTransportTrackerState() {
   const [recentStopSort, setRecentStopSort] = useState<RecentStopSort>(() =>
     getInitialRecentStopSort(),
   );
-  const [boardView, setBoardView] = useState<'all' | 'disrupted' | 'smooth'>(
-    'all',
-  );
+  const [boardView, setBoardView] = useState<BoardView>('all');
   const stopArrivals = useMemo(
     () => getStopArrivals(selectedStopId),
     [selectedStopId],
@@ -64,17 +63,11 @@ export function useTransportTrackerState() {
   );
   const arrivals = useMemo(() => {
     if (boardView === 'disrupted') {
-      return lineFilteredArrivals.filter(
-        (arrival) =>
-          arrival.status === 'delayed' || arrival.status === 'cancelled',
-      );
+      return lineFilteredArrivals.filter(isDisruptedArrival);
     }
 
     if (boardView === 'smooth') {
-      return lineFilteredArrivals.filter(
-        (arrival) =>
-          arrival.status === 'on-time' || arrival.status === 'boarding',
-      );
+      return lineFilteredArrivals.filter(isSmoothArrival);
     }
 
     return lineFilteredArrivals;
@@ -104,8 +97,7 @@ export function useTransportTrackerState() {
       return stop ? { ...recentStopView, stop } : undefined;
     })
     .filter(
-      (entry): entry is (typeof recentStopViews)[number] & { stop: Stop } =>
-        Boolean(entry),
+      (entry): entry is RecentStopEntry => Boolean(entry),
     );
   const recentStopIds = new Set(recentStopViews.map((entry) => entry.stopId));
   const nearbyStops = stops.filter(

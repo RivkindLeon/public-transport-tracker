@@ -43,6 +43,8 @@ export type TransportSnapshot = {
   arrivals: Arrival[];
 };
 
+export type LineFilter = 'all' | string;
+export type BoardView = 'all' | 'disrupted' | 'smooth';
 export type RecentStopFilter = 'all' | 'disrupted';
 export type RecentStopSort = 'recent' | 'urgent';
 
@@ -50,6 +52,8 @@ export type RecentStopView = {
   stopId: string;
   viewedAt: string;
 };
+
+export type RecentStopEntry = RecentStopView & { stop: Stop };
 
 export type RecentStopDisruptionSummary = {
   label: string;

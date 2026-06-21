@@ -1,6 +1,7 @@
 import { getStopArrivals } from '../data/mockData';
 import { maxRecentStops, snapshot, storageKeys } from '../constants';
 import type {
+  LineFilter,
   RecentStopFilter,
   RecentStopSort,
   RecentStopView,
@@ -86,20 +87,21 @@ export const getInitialSelectedStopId = () => {
   return initialStops[0]?.id ?? '';
 };
 
-export const getInitialActiveLine = (selectedStopId: string) => {
+export const getInitialActiveLine = (
+  selectedStopId: string,
+): LineFilter => {
   if (typeof window === 'undefined') {
     return 'all';
   }
 
-  const savedActiveLine = window.localStorage.getItem(storageKeys.activeLine);
+  const storedLine = window.localStorage.getItem(storageKeys.activeLine) ?? 'all';
   const selectedStop = initialStops.find((stop) => stop.id === selectedStopId);
 
   if (
-    savedActiveLine &&
-    savedActiveLine !== 'all' &&
-    selectedStop?.lines.includes(savedActiveLine)
+    storedLine !== 'all' &&
+    selectedStop?.lines.includes(storedLine)
   ) {
-    return savedActiveLine;
+    return storedLine;
   }
 
   return 'all';

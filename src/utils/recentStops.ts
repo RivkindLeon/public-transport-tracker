@@ -1,4 +1,5 @@
 import { getStopArrivals } from '../data/mockData';
+import { isDisruptedArrival } from './arrival';
 import { getMinutesUntil } from './time';
 import { getSavedSelectedArrivals } from './storage';
 import type {
@@ -26,9 +27,7 @@ export const getRecentStopDisruptionSummary = (
   stopId: string,
 ): RecentStopDisruptionSummary => {
   const stopArrivals = getStopArrivals(stopId);
-  const disruptedArrivals = stopArrivals.filter(
-    (arrival) => arrival.status === 'delayed' || arrival.status === 'cancelled',
-  );
+  const disruptedArrivals = stopArrivals.filter(isDisruptedArrival);
 
   if (disruptedArrivals.length === 0) {
     return {
@@ -39,7 +38,7 @@ export const getRecentStopDisruptionSummary = (
   }
 
   const cancelledCount = disruptedArrivals.filter(
-    (arrival) => arrival.status === 'cancelled',
+    ({ status }) => status === 'cancelled',
   ).length;
   const delayedCount = disruptedArrivals.length - cancelledCount;
   const disruptionBreakdown = [
