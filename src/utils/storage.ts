@@ -87,20 +87,16 @@ export const getInitialSelectedStopId = () => {
   return initialStops[0]?.id ?? '';
 };
 
-export const getInitialActiveLine = (
-  selectedStopId: string,
-): LineFilter => {
+export const getInitialActiveLine = (selectedStopId: string): LineFilter => {
   if (typeof window === 'undefined') {
     return 'all';
   }
 
-  const storedLine = window.localStorage.getItem(storageKeys.activeLine) ?? 'all';
+  const storedLine =
+    window.localStorage.getItem(storageKeys.activeLine) ?? 'all';
   const selectedStop = initialStops.find((stop) => stop.id === selectedStopId);
 
-  if (
-    storedLine !== 'all' &&
-    selectedStop?.lines.includes(storedLine)
-  ) {
+  if (storedLine !== 'all' && selectedStop?.lines.includes(storedLine)) {
     return storedLine;
   }
 

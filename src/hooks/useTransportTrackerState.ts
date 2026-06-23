@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { getRoute, getStopArrivals } from '../data/mockData';
 import { maxRecentStops, snapshot, storageKeys } from '../constants';
 import { isDisruptedArrival, isSmoothArrival } from '../utils/arrival';
-import type { BoardView, LineFilter, RecentStopEntry, RecentStopFilter, RecentStopSort } from '../types';
+import type {
+  BoardView,
+  LineFilter,
+  RecentStopEntry,
+  RecentStopFilter,
+  RecentStopSort,
+} from '../types';
 import {
   getInitialActiveLine,
   getInitialRecentStopFilter,
@@ -96,9 +102,7 @@ export function useTransportTrackerState() {
 
       return stop ? { ...recentStopView, stop } : undefined;
     })
-    .filter(
-      (entry): entry is RecentStopEntry => Boolean(entry),
-    );
+    .filter((entry): entry is RecentStopEntry => Boolean(entry));
   const recentStopIds = new Set(recentStopViews.map((entry) => entry.stopId));
   const nearbyStops = stops.filter(
     (stop) => !stop.isFavorite && !recentStopIds.has(stop.id),
