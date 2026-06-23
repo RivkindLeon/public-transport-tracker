@@ -79,7 +79,9 @@ export default function App() {
           boardView={boardView}
           arrivals={arrivals}
           totalArrivals={lineFilteredArrivals.length}
-          disruptedCount={lineFilteredArrivals.filter(isDisruptedArrival).length}
+          disruptedCount={
+            lineFilteredArrivals.filter(isDisruptedArrival).length
+          }
           onActiveLineChange={setActiveLine}
           onBoardViewChange={setBoardView}
           onFavoriteToggle={handleFavoriteToggle}
