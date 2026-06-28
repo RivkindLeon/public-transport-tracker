@@ -41,30 +41,6 @@ export function StopPanel({
   onRecentStopFilterChange,
   onRecentStopSortChange,
 }: StopPanelProps) {
-  const renderStopCard = (
-    stop: Stop,
-    options?: {
-      metaLabel?: string;
-      detailLabel?: string;
-      insightLabel?: string;
-      insightTone?: 'calm' | 'warning';
-      onDismiss?: () => void;
-    },
-  ) => (
-    <StopCard
-      key={stop.id}
-      stop={stop}
-      isSelected={selectedStopId === stop.id}
-      onSelect={onStopSelect}
-      onFavoriteToggle={onFavoriteToggle}
-      metaLabel={options?.metaLabel}
-      detailLabel={options?.detailLabel}
-      insightLabel={options?.insightLabel}
-      insightTone={options?.insightTone}
-      onDismiss={options?.onDismiss}
-    />
-  );
-
   return (
     <aside className="panel stop-panel">
       <div className="panel-header">
@@ -83,7 +59,15 @@ export function StopPanel({
               <p>No pinned stops yet.</p>
             </div>
           ) : (
-            favoriteStops.map((stop) => renderStopCard(stop))
+            favoriteStops.map((stop) => (
+              <StopCard
+                key={stop.id}
+                stop={stop}
+                isSelected={selectedStopId === stop.id}
+                onSelect={onStopSelect}
+                onFavoriteToggle={onFavoriteToggle}
+              />
+            ))
           )}
         </div>
       </section>
@@ -160,13 +144,20 @@ export function StopPanel({
             recentStops.map(({ stop, viewedAt }) => {
               const disruptionSummary = getRecentStopDisruptionSummary(stop.id);
 
-              return renderStopCard(stop, {
-                metaLabel: formatRecentView(viewedAt),
-                detailLabel: getRecentStopRouteSummary(stop.id),
-                onDismiss: () => onRecentStopDismiss(stop.id),
-                insightLabel: disruptionSummary.label,
-                insightTone: disruptionSummary.tone,
-              });
+              return (
+                <StopCard
+                  key={stop.id}
+                  stop={stop}
+                  isSelected={selectedStopId === stop.id}
+                  onSelect={onStopSelect}
+                  onFavoriteToggle={onFavoriteToggle}
+                  metaLabel={formatRecentView(viewedAt)}
+                  detailLabel={getRecentStopRouteSummary(stop.id)}
+                  onDismiss={() => onRecentStopDismiss(stop.id)}
+                  insightLabel={disruptionSummary.label}
+                  insightTone={disruptionSummary.tone}
+                />
+              );
             })
           )}
         </div>
@@ -180,7 +171,15 @@ export function StopPanel({
               <p>All non-pinned stops are already in your recent list.</p>
             </div>
           ) : (
-            nearbyStops.map((stop) => renderStopCard(stop))
+            nearbyStops.map((stop) => (
+              <StopCard
+                key={stop.id}
+                stop={stop}
+                isSelected={selectedStopId === stop.id}
+                onSelect={onStopSelect}
+                onFavoriteToggle={onFavoriteToggle}
+              />
+            ))
           )}
         </div>
       </section>
