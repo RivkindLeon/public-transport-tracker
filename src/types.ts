@@ -43,7 +43,8 @@ export type TransportSnapshot = {
   arrivals: Arrival[];
 };
 
-export type LineFilter = 'all' | string;
+// `'all'` means no line filter is active.
+export type LineFilter = string;
 export type BoardView = 'all' | 'disrupted' | 'smooth';
 export type RecentStopFilter = 'all' | 'disrupted';
 export type RecentStopSort = 'recent' | 'urgent';
