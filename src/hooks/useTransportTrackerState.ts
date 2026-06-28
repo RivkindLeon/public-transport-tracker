@@ -108,6 +108,7 @@ export function useTransportTrackerState() {
     (stop) => !stop.isFavorite && !recentStopIds.has(stop.id),
   );
 
+  // Consolidate all localStorage persistence into a single effect.
   useEffect(() => {
     window.localStorage.setItem(
       storageKeys.favoriteStops,
@@ -115,58 +116,43 @@ export function useTransportTrackerState() {
         stops.filter((stop) => stop.isFavorite).map((stop) => stop.id),
       ),
     );
-  }, [stops]);
-
-  useEffect(() => {
     window.localStorage.setItem(storageKeys.selectedStop, selectedStopId);
-  }, [selectedStopId]);
-
-  useEffect(() => {
     window.localStorage.setItem(
       storageKeys.recentStops,
       JSON.stringify(recentStopViews),
     );
-  }, [recentStopViews]);
-
-  useEffect(() => {
     window.localStorage.setItem(storageKeys.recentStopFilter, recentStopFilter);
-  }, [recentStopFilter]);
-
-  useEffect(() => {
     window.localStorage.setItem(storageKeys.recentStopSort, recentStopSort);
-  }, [recentStopSort]);
-
-  useEffect(() => {
     window.localStorage.setItem(storageKeys.activeLine, activeLine);
-  }, [activeLine]);
 
-  useEffect(() => {
     const savedSelectedArrivals = getSavedSelectedArrivals();
-
-    if (selectedArrivalId) {
+    if (effectiveSelectedArrivalId) {
       window.localStorage.setItem(
         storageKeys.selectedArrivals,
         JSON.stringify({
           ...savedSelectedArrivals,
-          [selectedStopId]: selectedArrivalId,
+          [selectedStopId]: effectiveSelectedArrivalId,
         }),
       );
-      return;
+    } else if (savedSelectedArrivals[selectedStopId]) {
+      const {
+        [selectedStopId]: _removedSelectedArrival,
+        ...remainingSelectedArrivals
+      } = savedSelectedArrivals;
+      window.localStorage.setItem(
+        storageKeys.selectedArrivals,
+        JSON.stringify(remainingSelectedArrivals),
+      );
     }
-
-    if (!savedSelectedArrivals[selectedStopId]) {
-      return;
-    }
-
-    const {
-      [selectedStopId]: _removedSelectedArrival,
-      ...remainingSelectedArrivals
-    } = savedSelectedArrivals;
-    window.localStorage.setItem(
-      storageKeys.selectedArrivals,
-      JSON.stringify(remainingSelectedArrivals),
-    );
-  }, [selectedArrivalId, selectedStopId]);
+  }, [
+    stops,
+    selectedStopId,
+    recentStopViews,
+    recentStopFilter,
+    recentStopSort,
+    activeLine,
+    effectiveSelectedArrivalId,
+  ]);
 
   const handleStopSelect = (stopId: string) => {
     setSelectedStopId(stopId);
