@@ -159,7 +159,9 @@ describe('StopCard', () => {
         />,
       );
 
-      const pinBtn = screen.getByRole('button', { name: /unpin central station/i });
+      const pinBtn = screen.getByRole('button', {
+        name: /unpin central station/i,
+      });
       expect(pinBtn).toBeInTheDocument();
       expect(pinBtn).toHaveTextContent('Pinned');
       expect(pinBtn).toHaveClass('active');
