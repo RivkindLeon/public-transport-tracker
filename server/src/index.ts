@@ -45,11 +45,17 @@ app.get('/api/snapshot', (_req, res) => {
 // ── Stops ──────────────────────────────────────────────────────────────
 app.get('/api/stops', (_req, res) => {
   const allStops = db.select().from(stops).all();
-  res.json(allStops.map((s) => ({ ...s, lines: JSON.parse(s.lines) as string[] })));
+  res.json(
+    allStops.map((s) => ({ ...s, lines: JSON.parse(s.lines) as string[] })),
+  );
 });
 
 app.get('/api/stops/:stopId', (req, res) => {
-  const stop = db.select().from(stops).where(eq(stops.id, req.params.stopId)).get();
+  const stop = db
+    .select()
+    .from(stops)
+    .where(eq(stops.id, req.params.stopId))
+    .get();
   if (!stop) {
     res.status(404).json({ error: 'Stop not found' });
     return;
@@ -64,7 +70,8 @@ app.get('/api/stops/:stopId/arrivals', (req, res) => {
     .where(eq(arrivals.stopId, req.params.stopId))
     .all()
     .sort(
-      (a, b) => new Date(a.expectedAt).getTime() - new Date(b.expectedAt).getTime(),
+      (a, b) =>
+        new Date(a.expectedAt).getTime() - new Date(b.expectedAt).getTime(),
     );
   res.json(stopArrivals);
 });
@@ -79,14 +86,22 @@ app.get('/api/routes', (_req, res) => {
     stops: allRouteStops
       .filter((rs) => rs.routeId === r.id)
       .sort((a, b) => a.order - b.order)
-      .map((rs) => ({ stopId: rs.stopId, stopName: rs.stopName, order: rs.order })),
+      .map((rs) => ({
+        stopId: rs.stopId,
+        stopName: rs.stopName,
+        order: rs.order,
+      })),
   }));
 
   res.json(result);
 });
 
 app.get('/api/routes/:routeId', (req, res) => {
-  const route = db.select().from(routes).where(eq(routes.id, req.params.routeId)).get();
+  const route = db
+    .select()
+    .from(routes)
+    .where(eq(routes.id, req.params.routeId))
+    .get();
   if (!route) {
     res.status(404).json({ error: 'Route not found' });
     return;
@@ -97,7 +112,11 @@ app.get('/api/routes/:routeId', (req, res) => {
     .where(eq(routeStops.routeId, req.params.routeId))
     .all()
     .sort((a, b) => a.order - b.order)
-    .map((rs) => ({ stopId: rs.stopId, stopName: rs.stopName, order: rs.order }));
+    .map((rs) => ({
+      stopId: rs.stopId,
+      stopName: rs.stopName,
+      order: rs.order,
+    }));
 
   res.json({ ...route, stops: routeStopList });
 });
@@ -116,14 +135,18 @@ app.get('/api/arrivals', (req, res) => {
   const result = query.all();
   res.json(
     result.sort(
-      (a, b) => new Date(a.expectedAt).getTime() - new Date(b.expectedAt).getTime(),
+      (a, b) =>
+        new Date(a.expectedAt).getTime() - new Date(b.expectedAt).getTime(),
     ),
   );
 });
 
 // ── Health ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  const stopCount = db.select({ count: sql<number>`count(*)` }).from(stops).get();
+  const stopCount = db
+    .select({ count: sql<number>`count(*)` })
+    .from(stops)
+    .get();
   res.json({
     status: 'ok',
     stopCount: stopCount?.count ?? 0,
@@ -133,7 +156,9 @@ app.get('/api/health', (_req, res) => {
 
 // ── Startup ────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`🚍 Public Transport Tracker API running on http://localhost:${PORT}`);
+  console.log(
+    `🚍 Public Transport Tracker API running on http://localhost:${PORT}`,
+  );
   console.log(`   Endpoints:`);
   console.log(`   GET /api/snapshot   — full transport snapshot`);
   console.log(`   GET /api/health     — health check`);
