@@ -1,0 +1,4 @@
+start.sh
+server/package-lock.json
+server/data/
+server/dist/

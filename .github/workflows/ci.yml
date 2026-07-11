@@ -20,17 +20,23 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
 
-      - name: Run lint
+      - name: Install server dependencies
+        run: cd server && npm ci
+
+      - name: Run frontend lint
         run: npm run lint
 
-      - name: Run tests
+      - name: Run frontend tests
         run: npm run test:run
 
-      - name: Check formatting
+      - name: Check frontend formatting
         run: npm run format
 
-      - name: Build app
+      - name: Build frontend
         run: npm run build
+
+      - name: Check server TypeScript compilation
+        run: cd server && npx tsc --noEmit
