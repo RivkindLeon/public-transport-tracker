@@ -57,16 +57,16 @@ npm run dev
 
 ### Backend API
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/snapshot` | Full transport snapshot (stops, routes with stop lists, arrivals) |
-| `GET /api/health` | Health check with stop count |
-| `GET /api/stops` | List all stops |
-| `GET /api/stops/:id` | Single stop by ID |
-| `GET /api/stops/:id/arrivals` | Arrivals for a stop, sorted by expected time |
-| `GET /api/routes` | List all routes with ordered stops |
-| `GET /api/routes/:id` | Single route by ID with ordered stops |
-| `GET /api/arrivals?stopId=&routeId=` | Query arrivals with optional filters |
+| Endpoint                             | Description                                                       |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| `GET /api/snapshot`                  | Full transport snapshot (stops, routes with stop lists, arrivals) |
+| `GET /api/health`                    | Health check with stop count                                      |
+| `GET /api/stops`                     | List all stops                                                    |
+| `GET /api/stops/:id`                 | Single stop by ID                                                 |
+| `GET /api/stops/:id/arrivals`        | Arrivals for a stop, sorted by expected time                      |
+| `GET /api/routes`                    | List all routes with ordered stops                                |
+| `GET /api/routes/:id`                | Single route by ID with ordered stops                             |
+| `GET /api/arrivals?stopId=&routeId=` | Query arrivals with optional filters                              |
 
 To use the backend API from the frontend, set `VITE_API_BASE=http://localhost:3001` in a `.env` file (the API client will be wired in a follow-up PR).
 
