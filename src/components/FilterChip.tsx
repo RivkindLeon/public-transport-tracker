@@ -35,11 +35,7 @@ export function FilterChip({
     .join(' ');
 
   return (
-    <button
-      type="button"
-      className={className}
-      onClick={() => onSelect(value)}
-    >
+    <button type="button" className={className} onClick={() => onSelect(value)}>
       {label}
     </button>
   );
