@@ -10,6 +10,7 @@ import {
   getRecentStopDisruptionSummary,
   getRecentStopRouteSummary,
 } from '../utils/recentStops';
+import { FilterChip } from './FilterChip';
 import { StopCard } from './StopCard';
 
 type StopPanelProps = {
@@ -92,34 +93,31 @@ export function StopPanel({
           ) : null}
         </div>
         <div className="filter-toolbar compact-filter-toolbar">
-          <button
-            type="button"
-            className={`filter-chip ${recentStopFilter === 'all' ? 'selected' : ''}`}
-            onClick={() => onRecentStopFilterChange('all')}
-          >
-            All recent stops
-          </button>
-          <button
-            type="button"
-            className={`filter-chip filter-chip-alert ${recentStopFilter === 'disrupted' ? 'selected' : ''}`}
-            onClick={() => onRecentStopFilterChange('disrupted')}
-          >
-            Disruptions only
-          </button>
-          <button
-            type="button"
-            className={`filter-chip ${recentStopSort === 'recent' ? 'selected' : ''}`}
-            onClick={() => onRecentStopSortChange('recent')}
-          >
-            Latest viewed
-          </button>
-          <button
-            type="button"
-            className={`filter-chip ${recentStopSort === 'urgent' ? 'selected' : ''}`}
-            onClick={() => onRecentStopSortChange('urgent')}
-          >
-            Urgent first
-          </button>
+          <FilterChip
+            active={recentStopFilter}
+            value="all"
+            label="All recent stops"
+            onSelect={onRecentStopFilterChange}
+          />
+          <FilterChip
+            active={recentStopFilter}
+            value="disrupted"
+            label="Disruptions only"
+            alert
+            onSelect={onRecentStopFilterChange}
+          />
+          <FilterChip
+            active={recentStopSort}
+            value="recent"
+            label="Latest viewed"
+            onSelect={onRecentStopSortChange}
+          />
+          <FilterChip
+            active={recentStopSort}
+            value="urgent"
+            label="Urgent first"
+            onSelect={onRecentStopSortChange}
+          />
         </div>
         <div className="board-summary recent-history-summary">
           <span>{recentStops.length} visible recent stops</span>

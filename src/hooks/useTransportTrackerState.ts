@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getRoute, getStopArrivals } from '../data/mockData';
-import { checkApiHealth, fetchSnapshot } from '../api';
 import { maxRecentStops, snapshot, storageKeys } from '../constants';
 import { isDisruptedArrival, isSmoothArrival } from '../utils/arrival';
+import { useApiBootstrap } from './useApiBootstrap';
 import type {
-  Arrival,
   BoardView,
   LineFilter,
   RecentStopEntry,
   RecentStopFilter,
   RecentStopSort,
-  Route,
   Stop,
 } from '../types';
 import {
@@ -31,6 +29,8 @@ import {
 
 export function useTransportTrackerState() {
   const [stops, setStops] = useState<Stop[]>(() => getInitialStops());
+  const { apiArrivals, apiRoutes, apiHealthy } = useApiBootstrap(setStops);
+
   const [selectedStopId, setSelectedStopId] = useState(() =>
     getInitialSelectedStopId(),
   );
@@ -47,62 +47,6 @@ export function useTransportTrackerState() {
     getInitialRecentStopSort(),
   );
   const [boardView, setBoardView] = useState<BoardView>('all');
-  const [apiArrivals, setApiArrivals] = useState<Map<string, Arrival[]>>(
-    new Map(),
-  );
-  const [apiRoutes, setApiRoutes] = useState<Map<string, Route>>(new Map());
-  const [apiHealthy, setApiHealthy] = useState(false);
-
-  // On mount, check if the backend is reachable. If so, load the full
-  // snapshot from the API and upgrade local state. Falls back to mock
-  // data silently on any error.
-  useEffect(() => {
-    let cancelled = false;
-
-    checkApiHealth()
-      .then((healthy) => {
-        if (cancelled) return;
-        setApiHealthy(healthy);
-
-        if (!healthy) return;
-
-        return fetchSnapshot().then((snap) => {
-          if (cancelled) return;
-
-          const loadedStops = snap.stops.sort((a, b) =>
-            a.isFavorite === b.isFavorite
-              ? a.name.localeCompare(b.name)
-              : a.isFavorite
-                ? -1
-                : 1,
-          );
-
-          setStops(loadedStops);
-          setApiArrivals(
-            new Map(
-              loadedStops.map((s) => [
-                s.id,
-                snap.arrivals
-                  .filter((a) => a.stopId === s.id)
-                  .sort(
-                    (a, b) =>
-                      new Date(a.expectedAt).getTime() -
-                      new Date(b.expectedAt).getTime(),
-                  ),
-              ]),
-            ),
-          );
-          setApiRoutes(new Map(snap.routes.map((r) => [r.id, r])));
-        });
-      })
-      .catch(() => {
-        // API data fetch failed — keep using mock data
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const stopArrivals = useMemo(() => {
     if (apiHealthy && apiArrivals.has(selectedStopId)) {

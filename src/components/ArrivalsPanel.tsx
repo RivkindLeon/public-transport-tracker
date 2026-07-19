@@ -1,5 +1,6 @@
 import type { Arrival, BoardView, LineFilter, Stop } from '../types';
 import { ArrivalCard } from './ArrivalCard';
+import { FilterChip } from './FilterChip';
 
 type ArrivalsPanelProps = {
   selectedStop: Stop;
@@ -52,47 +53,43 @@ export function ArrivalsPanel({
       </div>
 
       <div className="filter-toolbar" aria-label="Arrival line filters">
-        <button
-          type="button"
-          className={`filter-chip ${activeLine === 'all' ? 'selected' : ''}`}
-          onClick={() => onActiveLineChange('all')}
-        >
-          All lines
-        </button>
+        <FilterChip
+          active={activeLine}
+          value="all"
+          label="All lines"
+          onSelect={onActiveLineChange}
+        />
         {availableLines.map((line) => (
-          <button
+          <FilterChip
             key={line}
-            type="button"
-            className={`filter-chip ${activeLine === line ? 'selected' : ''}`}
-            onClick={() => onActiveLineChange(line)}
-          >
-            Line {line}
-          </button>
+            active={activeLine}
+            value={line}
+            label={`Line ${line}`}
+            onSelect={onActiveLineChange}
+          />
         ))}
       </div>
 
       <div className="filter-toolbar" aria-label="Arrival board views">
-        <button
-          type="button"
-          className={`filter-chip ${boardView === 'all' ? 'selected' : ''}`}
-          onClick={() => onBoardViewChange('all')}
-        >
-          Full board
-        </button>
-        <button
-          type="button"
-          className={`filter-chip filter-chip-alert ${boardView === 'disrupted' ? 'selected' : ''}`}
-          onClick={() => onBoardViewChange('disrupted')}
-        >
-          Disruptions only · {disruptedCount}
-        </button>
-        <button
-          type="button"
-          className={`filter-chip ${boardView === 'smooth' ? 'selected' : ''}`}
-          onClick={() => onBoardViewChange('smooth')}
-        >
-          Smooth trips · {calmCount}
-        </button>
+        <FilterChip
+          active={boardView}
+          value="all"
+          label="Full board"
+          onSelect={onBoardViewChange}
+        />
+        <FilterChip
+          active={boardView}
+          value="disrupted"
+          label={`Disruptions only · ${disruptedCount}`}
+          alert
+          onSelect={onBoardViewChange}
+        />
+        <FilterChip
+          active={boardView}
+          value="smooth"
+          label={`Smooth trips · ${calmCount}`}
+          onSelect={onBoardViewChange}
+        />
       </div>
 
       <div className="board-summary">
