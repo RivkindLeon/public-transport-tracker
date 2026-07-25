@@ -69,15 +69,6 @@ const mockSnapshot = {
 const HEALTH_URL = 'http://localhost:3001/api/health';
 const SNAPSHOT_URL = 'http://localhost:3001/api/snapshot';
 
-function makeOkResponse(body: unknown) {
-  return Promise.resolve({
-    ok: true,
-    status: 200,
-    json: () => Promise.resolve(body),
-    text: () => Promise.resolve(JSON.stringify(body)),
-  } as Response);
-}
-
 function makeHealthOk() {
   return Promise.resolve({ ok: true, status: 200 } as Response);
 }
