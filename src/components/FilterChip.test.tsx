@@ -11,7 +11,12 @@ afterEach(() => {
 describe('FilterChip', () => {
   it('renders the label text', () => {
     render(
-      <FilterChip active="all" value="all" label="All items" onSelect={vi.fn()} />,
+      <FilterChip
+        active="all"
+        value="all"
+        label="All items"
+        onSelect={vi.fn()}
+      />,
     );
 
     expect(
@@ -21,7 +26,12 @@ describe('FilterChip', () => {
 
   it('applies the selected class when active matches value', () => {
     render(
-      <FilterChip active="disrupted" value="disrupted" label="Disruptions" onSelect={vi.fn()} />,
+      <FilterChip
+        active="disrupted"
+        value="disrupted"
+        label="Disruptions"
+        onSelect={vi.fn()}
+      />,
     );
 
     const chip = screen.getByRole('button', { name: /disruptions/i });
@@ -30,7 +40,12 @@ describe('FilterChip', () => {
 
   it('does not apply the selected class when active differs from value', () => {
     render(
-      <FilterChip active="all" value="disrupted" label="Disruptions" onSelect={vi.fn()} />,
+      <FilterChip
+        active="all"
+        value="disrupted"
+        label="Disruptions"
+        onSelect={vi.fn()}
+      />,
     );
 
     const chip = screen.getByRole('button', { name: /disruptions/i });
@@ -39,7 +54,13 @@ describe('FilterChip', () => {
 
   it('applies the alert class when alert prop is true', () => {
     render(
-      <FilterChip active="all" value="disrupted" label="Disruptions" alert onSelect={vi.fn()} />,
+      <FilterChip
+        active="all"
+        value="disrupted"
+        label="Disruptions"
+        alert
+        onSelect={vi.fn()}
+      />,
     );
 
     const chip = screen.getByRole('button', { name: /disruptions/i });
@@ -48,7 +69,12 @@ describe('FilterChip', () => {
 
   it('does not apply the alert class when alert prop is false', () => {
     render(
-      <FilterChip active="all" value="all" label="All items" onSelect={vi.fn()} />,
+      <FilterChip
+        active="all"
+        value="all"
+        label="All items"
+        onSelect={vi.fn()}
+      />,
     );
 
     const chip = screen.getByRole('button', { name: /all items/i });
@@ -75,7 +101,12 @@ describe('FilterChip', () => {
     const onSelect = vi.fn();
 
     render(
-      <FilterChip active="all" value="42" label="Line 42" onSelect={onSelect} />,
+      <FilterChip
+        active="all"
+        value="42"
+        label="Line 42"
+        onSelect={onSelect}
+      />,
     );
 
     fireEvent.click(screen.getByRole('button', { name: /line 42/i }));
@@ -98,7 +129,12 @@ describe('FilterChip', () => {
 
   it('renders as a button element with type="button"', () => {
     render(
-      <FilterChip active="all" value="sorted" label="Sorted" onSelect={vi.fn()} />,
+      <FilterChip
+        active="all"
+        value="sorted"
+        label="Sorted"
+        onSelect={vi.fn()}
+      />,
     );
 
     const chip = screen.getByRole('button', { name: /sorted/i });
