@@ -68,7 +68,9 @@ app.put('/api/stops/:id/favorite', (req, res) => {
   const { isFavorite } = req.body;
 
   if (typeof isFavorite !== 'boolean') {
-    res.status(400).json({ error: 'Body must include isFavorite as a boolean' });
+    res
+      .status(400)
+      .json({ error: 'Body must include isFavorite as a boolean' });
     return;
   }
 
@@ -82,10 +84,7 @@ app.put('/api/stops/:id/favorite', (req, res) => {
     return;
   }
 
-  db.update(stops)
-    .set({ isFavorite })
-    .where(eq(stops.id, req.params.id))
-    .run();
+  db.update(stops).set({ isFavorite }).where(eq(stops.id, req.params.id)).run();
 
   const updated = db
     .select()
