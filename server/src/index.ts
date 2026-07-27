@@ -63,6 +63,40 @@ app.get('/api/stops/:stopId', (req, res) => {
   res.json({ ...stop, lines: JSON.parse(stop.lines) as string[] });
 });
 
+// ── Stop favorites toggle ───────────────────────────────────────────
+app.put('/api/stops/:id/favorite', (req, res) => {
+  const { isFavorite } = req.body;
+
+  if (typeof isFavorite !== 'boolean') {
+    res
+      .status(400)
+      .json({ error: 'Body must include isFavorite as a boolean' });
+    return;
+  }
+
+  const existing = db
+    .select()
+    .from(stops)
+    .where(eq(stops.id, req.params.id))
+    .get();
+  if (!existing) {
+    res.status(404).json({ error: 'Stop not found' });
+    return;
+  }
+
+  db.update(stops).set({ isFavorite }).where(eq(stops.id, req.params.id)).run();
+
+  const updated = db
+    .select()
+    .from(stops)
+    .where(eq(stops.id, req.params.id))
+    .get();
+  res.json({
+    ...updated,
+    lines: JSON.parse(updated!.lines) as string[],
+  });
+});
+
 app.get('/api/stops/:stopId/arrivals', (req, res) => {
   const stopArrivals = db
     .select()
@@ -164,6 +198,7 @@ app.listen(PORT, () => {
   console.log(`   GET /api/health     — health check`);
   console.log(`   GET /api/stops      — list all stops`);
   console.log(`   GET /api/stops/:id  — get a stop by id`);
+  console.log(`   PUT /api/stops/:id/favorite — toggle stop favorite status`);
   console.log(`   GET /api/stops/:id/arrivals — arrivals for a stop`);
   console.log(`   GET /api/routes     — list all routes with stops`);
   console.log(`   GET /api/routes/:id — get a route by id`);
