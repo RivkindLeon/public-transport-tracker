@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getRoute, getStopArrivals } from '../data/mockData';
 import { maxRecentStops, snapshot, storageKeys } from '../constants';
 import { isDisruptedArrival, isSmoothArrival } from '../utils/arrival';
 import { useApiBootstrap } from './useApiBootstrap';
+import { toggleFavoriteStop } from '../api';
 import type {
   BoardView,
   LineFilter,
@@ -175,15 +176,27 @@ export function useTransportTrackerState() {
     setSelectedArrivalId(getInitialSelectedArrivalId(stopId, 'all'));
   };
 
-  const handleFavoriteToggle = (stopId: string) => {
-    setStops((currentStops) =>
-      sortStops(
-        currentStops.map((stop) =>
-          stop.id === stopId ? { ...stop, isFavorite: !stop.isFavorite } : stop,
+  const handleFavoriteToggle = useCallback(
+    (stopId: string) => {
+      setStops((currentStops) =>
+        sortStops(
+          currentStops.map((stop) =>
+            stop.id === stopId
+              ? { ...stop, isFavorite: !stop.isFavorite }
+              : stop,
+          ),
         ),
-      ),
-    );
-  };
+      );
+
+      if (apiHealthy) {
+        toggleFavoriteStop(
+          stopId,
+          stops.find((s) => s.id === stopId)?.isFavorite ?? true,
+        ).catch(/* optimistic toggle — keep local state on failure */);
+      }
+    },
+    [apiHealthy, setStops, sortStops, stops, toggleFavoriteStop],
+  );
 
   return {
     snapshot,

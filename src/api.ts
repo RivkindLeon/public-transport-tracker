@@ -45,6 +45,26 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Stop favorites                                                     */
+/* ------------------------------------------------------------------ */
+
+/** Toggle favorite status for a stop. Returns the stop object. */
+export async function toggleFavoriteStop(
+  stopId: string,
+  isFavorite: boolean,
+  signal?: AbortSignal,
+): Promise<void> {
+  await request<void>(
+    `/api/stops/${encodeURIComponent(stopId)}/favorite`,
+    {
+      signal,
+      method: 'PUT',
+      body: JSON.stringify({ isFavorite }),
+    },
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Public helpers                                                     */
 /* ------------------------------------------------------------------ */
 
