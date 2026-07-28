@@ -13,13 +13,16 @@ Public transport information is often fragmented, delayed, or hard to compare, w
 
 ## Current status
 
-Product framing is in place, and the first mocked-arrivals app shell is now available locally with stop selection, arrival boards, route detail rendering, and persisted pinned stops powered by local mock data.
+Full-stack MVP complete. React + TypeScript + Vite frontend connected to an Express + SQLite backend via REST API (Drizzle ORM). Features include stop selection, arrival boards with line filtering and disruption detection, route detail rendering, and favorited stops with full server persistence. All data operations go through the API with graceful fallback to mock data when the backend is unreachable.
 
-## Next milestone
-
-Refine the mocked experience with focused interactions such as disruption drill-down, preference persistence for more board state, or lightweight trip-context views before choosing any real transport data provider.
-
-See `docs/mocked-arrivals-foundation.md` for the v0 scope, entities, mock data shape, and exit criteria.
+## Current features
+- Stop browsing with sorting (favorites, name, distance)
+- Arrival boards per stop with line filtering and disruption/smooth status
+- Route detail views with ordered stop lists
+- Favorited stops persisted to server via PUT /api/stops/:id/favorite
+- Recent stop history with filters and sorting
+- Board state persistence per stop
+- Full REST API for stops, routes, arrivals, and favorites
 
 ## Local development
 
@@ -32,7 +35,7 @@ npm run dev
 
 ### Full stack (frontend + backend)
 
-The backend is a separate Node.js + Express + SQLite server in `server/`. It provides all the same data that the frontend currently uses from mock data, served through a REST API on `http://localhost:3001`.
+The backend is a Node.js + Express + SQLite server using Drizzle ORM in `server/`. It provides a complete REST API serving real transport data (stops, routes, arrivals) that the frontend consumes directly when available, with mock data as a graceful fallback for development.
 
 **Quick start:**
 
