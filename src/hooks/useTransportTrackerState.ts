@@ -195,7 +195,7 @@ export function useTransportTrackerState() {
         ).catch(/* optimistic toggle — keep local state on failure */);
       }
     },
-    [apiHealthy, setStops, sortStops, stops, toggleFavoriteStop],
+    [apiHealthy, setStops, stops],
   );
 
   return {

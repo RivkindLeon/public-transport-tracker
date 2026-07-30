@@ -16,6 +16,7 @@ Public transport information is often fragmented, delayed, or hard to compare, w
 Full-stack MVP complete. React + TypeScript + Vite frontend connected to an Express + SQLite backend via REST API (Drizzle ORM). Features include stop selection, arrival boards with line filtering and disruption detection, route detail rendering, and favorited stops with full server persistence. All data operations go through the API with graceful fallback to mock data when the backend is unreachable.
 
 ## Current features
+
 - Stop browsing with sorting (favorites, name, distance)
 - Arrival boards per stop with line filtering and disruption/smooth status
 - Route detail views with ordered stop lists
