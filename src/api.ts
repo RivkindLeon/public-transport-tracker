@@ -54,14 +54,11 @@ export async function toggleFavoriteStop(
   isFavorite: boolean,
   signal?: AbortSignal,
 ): Promise<void> {
-  await request<void>(
-    `/api/stops/${encodeURIComponent(stopId)}/favorite`,
-    {
-      signal,
-      method: 'PUT',
-      body: JSON.stringify({ isFavorite }),
-    },
-  );
+  await request<void>(`/api/stops/${encodeURIComponent(stopId)}/favorite`, {
+    signal,
+    method: 'PUT',
+    body: JSON.stringify({ isFavorite }),
+  });
 }
 
 /* ------------------------------------------------------------------ */
