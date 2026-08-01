@@ -72,7 +72,7 @@ npm run dev
 | `GET /api/routes/:id`                | Single route by ID with ordered stops                             |
 | `GET /api/arrivals?stopId=&routeId=` | Query arrivals with optional filters                              |
 
-To use the backend API from the frontend, set `VITE_API_BASE=http://localhost:3001` in a `.env` file (the API client will be wired in a follow-up PR).
+To use the backend API from the frontend, set `VITE_API_BASE=http://localhost:3001` in a `.env` file.
 
 ### Backend tech stack
 
