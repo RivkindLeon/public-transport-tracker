@@ -85,3 +85,14 @@ To use the backend API from the frontend, set `VITE_API_BASE=http://localhost:30
 ## Repository visibility
 
 This repository is public.
+
+## Project Status: Archived
+
+This project has been archived as of 2026-08-20. All features are complete and functional. The MVP+ status has been confirmed.
+
+- ✅ Full-stack MVP complete
+- ✅ All CRUD operations functional
+- ✅ Tests passing
+- ✅ Documentation complete
+- ✅ Docker production setup validated
+
