@@ -48,13 +48,6 @@ export function useTransportTrackerState() {
     getInitialRecentStopSort(),
   );
   const [boardView, setBoardView] = useState<BoardView>('all');
-
-  const stopArrivals = useMemo(() => {
-    if (apiHealthy && apiArrivals.has(selectedStopId)) {
-      return apiArrivals.get(selectedStopId)!;
-    }
-    return getStopArrivals(selectedStopId);
-  }, [apiHealthy, apiArrivals, selectedStopId]);
   const [selectedArrivalId, setSelectedArrivalId] = useState(() =>
     getInitialSelectedArrivalId(
       getInitialSelectedStopId(),
@@ -64,6 +57,14 @@ export function useTransportTrackerState() {
 
   const selectedStop =
     stops.find((stop) => stop.id === selectedStopId) ?? stops[0];
+
+  const stopArrivals = useMemo(() => {
+    const arrivals = apiHealthy && apiArrivals.has(selectedStopId)
+      ? apiArrivals.get(selectedStopId)!
+      : getStopArrivals(selectedStopId);
+
+    return arrivals;
+  }, [apiHealthy, apiArrivals, selectedStopId]);
   const availableLines = useMemo(
     () => selectedStop?.lines ?? [],
     [selectedStop],
