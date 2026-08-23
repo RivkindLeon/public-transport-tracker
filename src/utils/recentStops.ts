@@ -38,7 +38,7 @@ export const getRecentStopDisruptionSummary = (
   }
 
   const cancelledCount = disruptedArrivals.filter(
-    ({ status }) => status === 'cancelled',
+    (arrival) => arrival.status === 'cancelled',
   ).length;
   const delayedCount = disruptedArrivals.length - cancelledCount;
   const disruptionBreakdown = [

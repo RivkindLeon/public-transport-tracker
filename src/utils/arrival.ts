@@ -1,7 +1,13 @@
-import type { Arrival } from '../types';
+import type { Arrival, ArrivalStatus } from '../types';
+
+export const isDisruptedStatus = (status: ArrivalStatus): boolean =>
+  status === 'delayed' || status === 'cancelled';
+
+export const isSmoothStatus = (status: ArrivalStatus): boolean =>
+  status === 'on-time' || status === 'boarding';
 
 export const isDisruptedArrival = (arrival: Arrival): boolean =>
-  arrival.status === 'delayed' || arrival.status === 'cancelled';
+  isDisruptedStatus(arrival.status);
 
 export const isSmoothArrival = (arrival: Arrival): boolean =>
-  arrival.status === 'on-time' || arrival.status === 'boarding';
+  isSmoothStatus(arrival.status);
